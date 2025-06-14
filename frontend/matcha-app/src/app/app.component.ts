@@ -1,10 +1,9 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { TestComponentComponent } from '@core/test-component/test-component.component';
 
 @Component({
   selector: 'matcha-root',
-    imports: [RouterOutlet, TestComponentComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
