@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Button } from 'primeng/button';
 
 @Component({
-  selector: 'app-test-component',
+  selector: 'matcha-test-component',
   imports: [
     Button
   ],
@@ -10,5 +10,4 @@ import { Button } from 'primeng/button';
   styleUrl: './test-component.component.css'
 })
 export class TestComponentComponent {
-
 }
