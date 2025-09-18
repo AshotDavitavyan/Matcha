@@ -1,0 +1,13 @@
+<div class="min-h-screen flex items-center justify-center border">
+    <form [formGroup]="registrationForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 sm:w-56  border border-gray-300 rounded p-6">
+            <input type="text" pInputText formControlName="username"/>
+            <input type="text" pInputText formControlName="name"/>
+            <input type="text" pInputText formControlName="surname"/>
+            <input type="email" pInputText formControlName="surname"/>
+            <p-password formControlName="password" [feedback]="false" autocomplete="off" fluid/>
+        <div class="flex justify-end gap-2.5">
+            <p-button type="submit" severity="success" label="Submit"></p-button>
+            <p-button severity="secondary" routerLink="/auth/login" label="Back"></p-button>
+        </div>
+    </form>
+</div>
