@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { RouterLink } from '@angular/router';
+import { AuthProvider } from '@core/auth/services/auth.provider';
+import { LoginModel } from '@core/auth/models/loginModel';
 
 @Component({
     selector: 'matcha-registration',
@@ -19,6 +21,7 @@ import { RouterLink } from '@angular/router';
     styleUrl: './registration.component.css'
 })
 export class RegistrationComponent {
+    private authProvider = inject(AuthProvider);
     fb: FormBuilder = inject(FormBuilder);
     registrationForm: FormGroup = this.fb.group({
         username: ['', Validators.required],
@@ -30,8 +33,8 @@ export class RegistrationComponent {
 
     onSubmit() {
         if (this.registrationForm.valid) {
-            console.log('Form value', this.registrationForm.value);
-            // Handle successful form submission (e.g., call a registration service)
+            const registrationData: LoginModel = this.registrationForm.getRawValue();
+            this.authProvider.login(registrationData).subscribe();
         } else {
             this.registrationForm.markAllAsTouched();
         }
