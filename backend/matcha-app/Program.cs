@@ -1,14 +1,21 @@
-var builder = WebApplication.CreateBuilder(args);
+using Application.Commands;
+using Domain.Repositories;
+using Infrastructure.Database;
+using Infrastructure.Repositories;
+using Scalar.AspNetCore;
 
-// Add services to the container.
+var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
 
+builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(typeof(CreateUserCommand).Assembly));
+builder.Services.AddSingleton(new DbConnectionFactory(connectionString));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -19,5 +26,11 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapScalarApiReference(options =>
+{
+    options.Title = "My API Reference";
+    options.Theme = ScalarTheme.Moon; // Options: Default, Mars, Moon, Solar
+});
 
 app.Run();
