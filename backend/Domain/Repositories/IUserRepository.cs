@@ -6,8 +6,8 @@ namespace Domain.Repositories;
 public interface IUserRepository
 {
     Task<int> Create(User user);
-    // Task<User> Get(int id);
-    // Task<IEnumerable<User>> GetAll();
-    // Task Update(User user);
-    // Task Delete(int id);
+    Task<IList<User>> GetAll();
+    Task<User> GetById(int id);
+    Task<User> Update(User user);
+    Task Delete(int id);
 }

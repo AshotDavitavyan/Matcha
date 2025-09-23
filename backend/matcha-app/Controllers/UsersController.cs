@@ -15,8 +15,27 @@ public class UsersController (IMediator mediator) : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
     {
-        return Ok();
+        return Ok(await mediator.Send(query));
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById([FromRoute] GetUserByIdQuery query)
+    {
+        return Ok(await mediator.Send(query));
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> Update([FromBody] UpdateUserCommand command)
+    {
+        return Ok(await mediator.Send(command));
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete([FromRoute] DeleteUserCommand command)
+    {
+        await mediator.Send(command);
+        return NoContent();
     }
 }
