@@ -1,0 +1,25 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: adavitav
+      POSTGRES_PASSWORD: passwd
+      POSTGRES_DB: matcha
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ashotd03@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: pgpasswd
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_data:

@@ -1,0 +1,84 @@
+# Build results
+bin/
+obj/
+[Ll]og/
+out/
+AppPackages/
+*.appx
+*.appxbundle
+*.msix
+*.msixbundle
+*.vsix
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Auto-generated VS folders
+.vscode/
+.vs/
+
+# ASP.NET specific
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Visual Studio Code settings
+.vscode/
+.history/
+
+# Rider
+.idea/
+
+# Build files
+*.dll
+*.exe
+*.pdb
+*.cache
+*.dbmdl
+*.log
+
+# Dotnet CLI
+*.deps.json
+*.runtimeconfig.json
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+# Optional: if you use package restore
+**/packages/*
+
+# Test results
+TestResults/
+*.TestResults/
+*.trx
+*.coverage
+*.coveragexml
+*.log
+
+# Publish results
+publish/
+*.pubxml
+*.publishproj
+
+# Global JSON & tools
+.global.json
+.toolsettings/
+
+# Other
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+*.sln.ide
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
