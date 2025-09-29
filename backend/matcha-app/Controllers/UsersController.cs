@@ -1,4 +1,5 @@
 using Application.Commands;
+using Application.Dtos;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,26 +10,38 @@ namespace matcha_app.Controllers;
 public class UsersController (IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateUserCommand command)
+    public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
     {
-        return Ok(await mediator.Send(command));
+        var command = new CreateUserCommand(
+            dto.Username,
+            dto.FirstName,
+            dto.LastName,
+            dto.Email,
+            dto.Password);
+        var id = await mediator.Send(command);
+        return CreatedAtAction(nameof(GetById), new { id }, id);
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
+    public async Task<IActionResult> GetAll()
     {
+        var query = new GetAllUsersQuery();
         return Ok(await mediator.Send(query));
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById([FromRoute] GetUserByIdQuery query)
     {
-        return Ok(await mediator.Send(query));
+        var user = await mediator.Send(query);
+        if (user == null)
+            return NotFound();
+        return Ok(user);
     }
 
-    [HttpPut]
-    public async Task<IActionResult> Update([FromBody] UpdateUserCommand command)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
     {
+        var command = new UpdateUserCommand(id, dto);
         return Ok(await mediator.Send(command));
     }
 

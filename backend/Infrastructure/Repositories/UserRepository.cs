@@ -29,11 +29,11 @@ public class UserRepository : IUserRepository
         sql.Parameters.AddWithValue("@Password", user.Password);
         
         return (int)await sql.ExecuteScalarAsync();
-    }
+    }        
 
     public async Task<IList<User>> GetAll()
     {
-        var users = new List<User>();
+        List<User> users = new List<User>();
         using var conn = _connectionFactory.CreateConnection();
         await conn.OpenAsync();
         using var sql = new NpgsqlCommand(
@@ -53,7 +53,7 @@ public class UserRepository : IUserRepository
         return users;
     }
 
-    public async Task<User> GetById(int id)
+    public async Task<User?> GetById(int id)
     {
         using var conn = _connectionFactory.CreateConnection();
         await conn.OpenAsync();
@@ -74,6 +74,7 @@ public class UserRepository : IUserRepository
         }
         return null;
     }
+    
     public async Task<User> Update(User user)
     {
         using var conn = _connectionFactory.CreateConnection();

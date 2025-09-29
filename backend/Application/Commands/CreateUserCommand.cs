@@ -1,26 +1,32 @@
+using Application.Dtos;
 using Domain.Entities;
 using Domain.Repositories;
 using MediatR;
 
 namespace Application.Commands;
 
-public record CreateUserCommand(User User) : IRequest<User>;
+public record CreateUserCommand(
+    string Username,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Password
+    ) : IRequest<int>;
 
-public class CreateUserCommandHandler (IUserRepository userRepository) : IRequestHandler<CreateUserCommand, User>
+public class CreateUserCommandHandler (IUserRepository userRepository) : IRequestHandler<CreateUserCommand, int>
 {
-    public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         var user = new User
         {
-            Username = request.User.Username,
-            LastName = request.User.LastName,
-            FirstName = request.User.FirstName,
-            Email = request.User.Email,
-            Password = request.User.Password
+            Username = request.Username,
+            LastName = request.LastName,
+            FirstName = request.FirstName,
+            Email = request.Email,
+            Password = request.Password
         };
 
-        var id = await userRepository.Create(user);
-        user.Id = id;
-        return user;
+        int id = await userRepository.Create(user);
+        return id;
     }
 }
