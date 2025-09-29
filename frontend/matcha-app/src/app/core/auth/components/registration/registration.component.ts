@@ -5,7 +5,7 @@ import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { RouterLink } from '@angular/router';
 import { AuthProvider } from '@core/auth/services/auth.provider';
-import { LoginModel } from '@core/auth/models/loginModel';
+import { RegistrationModel } from '@core/auth/models/registrationModel';
 
 @Component({
     selector: 'matcha-registration',
@@ -25,16 +25,16 @@ export class RegistrationComponent {
     fb: FormBuilder = inject(FormBuilder);
     registrationForm: FormGroup = this.fb.group({
         username: ['', Validators.required],
-        name: ['', Validators.required],
-        surname: ['', Validators.required],
+        firstName: ['', Validators.required],
+        lastName: ['', Validators.required],
         email: ['', Validators.required],
         password: ['', [Validators.required, Validators.minLength(6)]],
     });
 
     onSubmit() {
         if (this.registrationForm.valid) {
-            const registrationData: LoginModel = this.registrationForm.getRawValue();
-            this.authProvider.login(registrationData).subscribe();
+            const registrationData: RegistrationModel = this.registrationForm.getRawValue();
+            this.authProvider.register(registrationData).subscribe();
         } else {
             this.registrationForm.markAllAsTouched();
         }
