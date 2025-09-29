@@ -12,7 +12,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Domain\Domain.csproj" />
-      <ProjectReference Include="..\matcha-app\Domain\Domain.csproj" />
     </ItemGroup>
 
 </Project>
