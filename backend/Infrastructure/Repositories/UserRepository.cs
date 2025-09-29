@@ -6,17 +6,11 @@ using Npgsql;
 
 namespace Infrastructure.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository(DbConnectionFactory factory) : IUserRepository
 {
-    private readonly DbConnectionFactory _connectionFactory;
-
-    public UserRepository(DbConnectionFactory  factory)
-    {
-        _connectionFactory = factory;
-    }
     public async Task<int> Create(User user)
     {
-        using var conn = _connectionFactory.CreateConnection();
+        using var conn = factory.CreateConnection();
         await conn.OpenAsync();
         using var sql = new NpgsqlCommand(
             "INSERT INTO Users (Username, FirstName, LastName, Email, Password)" +
@@ -34,7 +28,7 @@ public class UserRepository : IUserRepository
     public async Task<IList<User>> GetAll()
     {
         List<User> users = new List<User>();
-        using var conn = _connectionFactory.CreateConnection();
+        using var conn = factory.CreateConnection();
         await conn.OpenAsync();
         using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email FROM users", conn);
@@ -55,7 +49,7 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetById(int id)
     {
-        using var conn = _connectionFactory.CreateConnection();
+        using var conn = factory.CreateConnection();
         await conn.OpenAsync();
         using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email FROM users WHERE Id = @Id", conn);
@@ -77,7 +71,7 @@ public class UserRepository : IUserRepository
     
     public async Task<User> Update(User user)
     {
-        using var conn = _connectionFactory.CreateConnection();
+        using var conn = factory.CreateConnection();
         await conn.OpenAsync();
         using var sql = new NpgsqlCommand(
             "UPDATE users SET username=@username, firstname=@firstname, lastname=@lastname, email=@email WHERE Id = @Id", conn);
@@ -92,7 +86,7 @@ public class UserRepository : IUserRepository
     
     public async Task Delete(int id)
     {
-        using var conn = _connectionFactory.CreateConnection();
+        using var conn = factory.CreateConnection();
         await conn.OpenAsync();
         using var sql = new NpgsqlCommand(
             "DELETE FROM users WHERE Id = @Id", conn);
