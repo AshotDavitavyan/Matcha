@@ -1,1 +1,27 @@
-<p>user-edit works!</p>
+<div class="min-h-screen flex items-center justify-center">
+  <div class="flex flex-col gap-4 sm:w-96 border border-gray-300 rounded p-6">
+    <!-- Temporary user id input to mock reading from cookies -->
+    <div class="flex items-end gap-2">
+      <div class="flex-1">
+        <label class="block text-sm text-gray-700 mb-1">Mock User ID</label>
+        <input type="number" pInputText [formControl]="userIdControl" placeholder="Enter user id" />
+      </div>
+      <p-button (onClick)="loadUser()" [disabled]="loading || !userIdControl.value" label="Load" severity="secondary"></p-button>
+    </div>
+
+    <div *ngIf="loading" class="text-sm text-gray-500">Loading user...</div>
+    <div *ngIf="error" class="text-sm text-red-600">{{ error }}</div>
+    <div *ngIf="success" class="text-sm text-green-700">{{ success }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-3">
+      <input type="text" placeholder="Username" pInputText formControlName="username" />
+      <input type="text" placeholder="Name" pInputText formControlName="firstName" />
+      <input type="text" placeholder="Surname" pInputText formControlName="lastName" />
+      <input type="email" placeholder="Email" pInputText formControlName="email" />
+
+      <div class="flex justify-end gap-2 pt-2">
+        <p-button type="submit" [disabled]="saving || loading || form.invalid || !userIdControl.value" severity="success" label="Save"></p-button>
+      </div>
+    </form>
+  </div>
+</div>
