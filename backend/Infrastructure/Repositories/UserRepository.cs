@@ -84,16 +84,6 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
         return user;
     }
     
-    public async Task Delete(int id)
-    {
-        await using var conn = factory.CreateConnection();
-        await conn.OpenAsync();
-        await using var sql = new NpgsqlCommand(
-            "DELETE FROM users WHERE Id = @Id", conn);
-        sql.Parameters.AddWithValue("@Id", id);
-        await sql.ExecuteNonQueryAsync();
-    }
-
     public async Task UpdatePassword(int requestId, string hashedNew)
     {
         await using var conn = factory.CreateConnection();

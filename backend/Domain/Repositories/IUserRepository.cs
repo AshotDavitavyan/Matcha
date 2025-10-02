@@ -9,6 +9,5 @@ public interface IUserRepository
     Task<IList<User>> GetAll();
     Task<User?> GetById(int id);
     Task<User> Update(User user);
-    Task Delete(int id);
     Task UpdatePassword(int requestId, string hashedNew);
 }

@@ -45,13 +45,6 @@ public class UsersController (IMediator mediator) : ControllerBase
         return Ok(await mediator.Send(command));
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete([FromRoute] DeleteUserCommand command)
-    {
-        await mediator.Send(command);
-        return NoContent();
-    }
-
     [HttpPut("{id}/password")]
     public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
     {
