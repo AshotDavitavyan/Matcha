@@ -1,9 +1,8 @@
-using Application.Dtos;
-using Domain.Entities;
+using Application.Dtos.UserDtos;
 using Domain.Repositories;
 using MediatR;
 
-namespace Application.Commands;
+namespace Application.Queries;
 
 public record GetAllUsersQuery() : IRequest<IList<UserSummaryDto>>;
 public class GetAllUsersCommandHandler (IUserRepository userRepository) : IRequestHandler<GetAllUsersQuery, IList<UserSummaryDto>>

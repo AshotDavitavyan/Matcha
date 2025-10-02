@@ -1,4 +1,4 @@
-namespace Application.Dtos;
+namespace Application.Dtos.UserDtos;
 
 public record UserDto
 {
@@ -6,5 +6,5 @@ public record UserDto
 	public string Username { get; set; }
 	public string FirstName { get; set; }
 	public string LastName { get; set; }
-	public string EmailAddress { get; set; }
+	public string Email { get; set; }
 }

@@ -1,5 +1,7 @@
 using Application.Commands;
 using Application.Dtos;
+using Application.Dtos.UserDtos;
+using Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
