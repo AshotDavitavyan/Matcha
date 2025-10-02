@@ -51,4 +51,14 @@ public class UsersController (IMediator mediator) : ControllerBase
         await mediator.Send(command);
         return NoContent();
     }
+
+    [HttpPut("{id}/password")]
+    public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
+    {
+        var command = new UpdatePasswordCommand(
+            id,
+            dto);
+        await mediator.Send(command);
+        return NoContent();
+    }
 }
