@@ -1,6 +1,6 @@
-namespace Application.Dtos;
+namespace Application.Dtos.UserDtos;
 
-public class CreateUserDto
+public record CreateUserDto
 {
 	public string Username { get; set; }
 	public string FirstName { get; set; }
