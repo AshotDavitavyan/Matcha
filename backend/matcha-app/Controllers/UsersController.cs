@@ -1,5 +1,7 @@
 using Application.Commands;
 using Application.Dtos;
+using Application.Dtos.UserDtos;
+using Application.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,9 +47,12 @@ public class UsersController (IMediator mediator) : ControllerBase
         return Ok(await mediator.Send(command));
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete([FromRoute] DeleteUserCommand command)
+    [HttpPut("{id}/password")]
+    public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
     {
+        var command = new UpdatePasswordCommand(
+            id,
+            dto);
         await mediator.Send(command);
         return NoContent();
     }

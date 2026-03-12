@@ -1,6 +1,6 @@
-namespace Application.Dtos;
+namespace Application.Dtos.UserDtos;
 
-public class UserSummaryDto
+public record UserSummaryDto
 {
 	public int Id { get; set; }
 	public string Username { get; set; }
