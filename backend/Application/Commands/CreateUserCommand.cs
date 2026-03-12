@@ -1,6 +1,4 @@
-using Application.Dtos;
 using Application.Interfaces;
-using Application.Security;
 using Domain.Entities;
 using Domain.Repositories;
 using MediatR;
@@ -15,11 +13,10 @@ public record CreateUserCommand(
     string Password
     ) : IRequest<int>;
 
-public class CreateUserCommandHandler (IUserRepository userRepository) : IRequestHandler<CreateUserCommand, int>
+public class CreateUserCommandHandler (IUserRepository userRepository, IPasswordHasher hasher) : IRequestHandler<CreateUserCommand, int>
 {
     public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        IPasswordHasher hasher = new PasswordHasher();
         string hashedPassword = hasher.HashPassword(request.Password);
         var user = new User
         {

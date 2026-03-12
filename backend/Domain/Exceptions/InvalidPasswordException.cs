@@ -1,6 +1,3 @@
 namespace Domain.Exceptions;
 
-public class InvalidPasswordException
-{
-	
-}
+public class InvalidPasswordException() : DomainException("The current password is incorrect");

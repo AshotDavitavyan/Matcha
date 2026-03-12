@@ -53,7 +53,7 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
         await using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email, password FROM users WHERE Id = @Id", conn);
         sql.Parameters.AddWithValue("@Id", id);
-        using var reader = await sql.ExecuteReaderAsync();
+        await using var reader = await sql.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
             return new User

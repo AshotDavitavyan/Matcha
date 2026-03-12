@@ -1,6 +1,3 @@
 namespace Domain.Exceptions;
 
-public class DomainException
-{
-	
-}
+public abstract class DomainException(string message) : Exception(message);
