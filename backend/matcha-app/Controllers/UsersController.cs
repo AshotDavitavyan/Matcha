@@ -34,10 +34,7 @@ public class UsersController (IMediator mediator) : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById([FromRoute] GetUserByIdQuery query)
     {
-        var user = await mediator.Send(query);
-        if (user == null)
-            return NotFound();
-        return Ok(user);
+        return Ok(await mediator.Send(query));
     }
 
     [HttpPut("{id}")]
