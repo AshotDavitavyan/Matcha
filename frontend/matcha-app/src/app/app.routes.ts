@@ -30,7 +30,7 @@ export const routes: Routes = [
                     { path: 'password', component: PasswordEditComponent },
                     { path: 'black-list', component: BlackListComponent },
                 ]},
-            {path: 'profile', component: UserEditComponent},
+            {path: 'profile', component: UserProfileComponent},
         ]
     },
     { path: '**', redirectTo: 'auth/login' }

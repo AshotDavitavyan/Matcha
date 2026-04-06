@@ -3,14 +3,17 @@ using Application.Dtos;
 using Application.Dtos.UserDtos;
 using Application.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace matcha_app.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class UsersController (IMediator mediator) : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
     {

@@ -1,0 +1,201 @@
+<div class="p-6">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+    <!-- Success Message -->
+    @if (success()) {
+      <p-message severity="success" [text]="success()!" [closable]="true" (onClose)="success.set(null)"></p-message>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <p-message severity="error" [text]="error()!" [closable]="true" (onClose)="error.set(null)"></p-message>
+    }
+
+    <!-- Bio -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Bio</label>
+      <textarea 
+        pInputText 
+        formControlName="bio" 
+        placeholder="Tell us about yourself..."
+        rows="4"
+        class="w-full resize-none"
+        [class.border-red-500]="getFieldError('bio')"
+      ></textarea>
+      @if (getFieldError('bio')) {
+        <p class="text-sm text-red-600">{{ getFieldError('bio') }}</p>
+      }
+      <p class="text-xs text-gray-500">{{ form.get('bio')?.value?.length || 0 }}/500 characters</p>
+    </div>
+
+    <!-- Age -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Age</label>
+      <p-inputNumber 
+        formControlName="age" 
+        placeholder="Enter your age"
+        [min]="18"
+        [max]="100"
+        [showButtons]="true"
+        class="w-full"
+        [class.border-red-500]="getFieldError('age')"
+      ></p-inputNumber>
+      @if (getFieldError('age')) {
+        <p class="text-sm text-red-600">{{ getFieldError('age') }}</p>
+      }
+    </div>
+
+    <!-- Location -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Location</label>
+      <input 
+        type="text" 
+        pInputText 
+        formControlName="location" 
+        placeholder="Enter your location"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Interests -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Interests</label>
+      <div formArrayName="interests" class="space-y-2">
+        @for (interest of form.get('interests')?.value || []; track $index) {
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              pInputText 
+              [formControlName]="$index" 
+              placeholder="Enter an interest"
+              class="flex-1"
+            />
+            <p-button 
+              type="button"
+              icon="pi pi-times" 
+              severity="danger" 
+              [text]="true"
+              (onClick)="removeInterest($index)"
+              [disabled]="(form.get('interests')?.value?.length || 0) <= 1">
+            </p-button>
+          </div>
+        }
+      </div>
+      <p-button 
+        type="button"
+        icon="pi pi-plus" 
+        label="Add Interest" 
+        severity="secondary" 
+        [text]="true"
+        (onClick)="addInterest()">
+      </p-button>
+    </div>
+
+    <!-- Dating Preferences -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Dating Preferences</label>
+      <div formArrayName="datingPreferences" class="space-y-2">
+        @for (preference of form.get('datingPreferences')?.value || []; track $index) {
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              pInputText 
+              [formControlName]="$index" 
+              placeholder="Enter a dating preference"
+              class="flex-1"
+            />
+            <p-button 
+              type="button"
+              icon="pi pi-times" 
+              severity="danger" 
+              [text]="true"
+              (onClick)="removeDatingPreference($index)"
+              [disabled]="(form.get('datingPreferences')?.value?.length || 0) <= 1">
+            </p-button>
+          </div>
+        }
+      </div>
+      <p-button 
+        type="button"
+        icon="pi pi-plus" 
+        label="Add Preference" 
+        severity="secondary" 
+        [text]="true"
+        (onClick)="addDatingPreference()">
+      </p-button>
+    </div>
+
+    <!-- Photo Upload -->
+    <div class="space-y-4">
+      <label class="block text-sm font-medium text-gray-700">Photos</label>
+      
+      <!-- File Upload -->
+      <p-fileUpload 
+        mode="basic" 
+        name="photo"
+        accept="image/*"
+        [maxFileSize]="5000000"
+        [showUploadButton]="false"
+        [showCancelButton]="false"
+        (onSelect)="onFileSelect($event)"
+        chooseLabel="Upload Photo">
+      </p-fileUpload>
+
+      <!-- Photo Gallery -->
+      @if (photos().length > 0) {
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          @for (photo of photos(); track photo.id) {
+            <div class="relative group">
+              <img 
+                [src]="photo.url" 
+                [alt]="'Photo ' + photo.id"
+                class="w-full h-32 object-cover rounded-lg"
+                [class.ring-2]="photo.isMain"
+                [class.ring-blue-500]="photo.isMain"
+              />
+              
+              <!-- Photo Actions -->
+              <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                @if (!photo.isMain) {
+                <p-button 
+                  icon="pi pi-star" 
+                  severity="secondary" 
+                  [text]="true"
+                  size="small"
+                  (onClick)="setMainPhoto(photo.id)"
+                  pTooltip="Set as main photo">
+                </p-button>
+                }
+                <p-button 
+                  icon="pi pi-trash" 
+                  severity="danger" 
+                  [text]="true"
+                  size="small"
+                  (onClick)="deletePhoto(photo.id)"
+                  pTooltip="Delete photo">
+                </p-button>
+              </div>
+
+              <!-- Main Photo Badge -->
+              @if (photo.isMain) {
+                <div class="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                  Main
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end pt-4">
+      <p-button 
+        type="submit" 
+        [disabled]="saving() || form.invalid" 
+        severity="success" 
+        [loading]="saving()"
+        label="Save Changes">
+      </p-button>
+    </div>
+  </form>
+</div>

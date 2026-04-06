@@ -3,17 +3,35 @@
           [formGroup]="loginForm"
           (ngSubmit)="onSubmit()"
     >
+
         <div class="flex flex-col gap-1">
-            <input type="text" placeholder="Username" pInputText formControlName="username"/>
-            <p-password placeholder="Password" formControlName="password" fluid [feedback]="false"/>
+            <input type="text" 
+                   placeholder="Username" 
+                   pInputText 
+                   formControlName="username"
+                   [disabled]="isLoading()"/>
+            <p-password placeholder="Password" 
+                       formControlName="password" 
+                       fluid 
+                       [feedback]="false"
+                       [disabled]="isLoading()"/>
         </div>
+        
         <div class="flex justify-end gap-2.5">
-            <p-button type="submit" severity="success" label="Submit"/>
+            <p-button type="submit" 
+                     severity="success" 
+                     label="Submit"
+                     [loading]="isLoading()"
+                     [disabled]="loginForm.invalid || isLoading()"/>
             <p-button label="Registration"
                       severity="secondary"
                       routerLink="/auth/register"
-            />
+                      [disabled]="isLoading()"/>
         </div>
-        <p-button  class="flex justify-center"  label="forgot password?" link/>
+        
+        <p-button class="flex justify-center" 
+                 label="forgot password?" 
+                 link
+                 [disabled]="isLoading()"/>
     </form>
 </div>

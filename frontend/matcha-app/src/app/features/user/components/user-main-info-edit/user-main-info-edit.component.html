@@ -1,0 +1,88 @@
+<div class="p-6">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+    <!-- Success Message -->
+    @if (success()) {
+      <p-message severity="success" [text]="success()!" [closable]="true" (onClose)="success.set(null)"></p-message>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <p-message severity="error" [text]="error()!" [closable]="true" (onClose)="error.set(null)"></p-message>
+    }
+
+    <!-- Username -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Username</label>
+      <input 
+        type="text" 
+        pInputText 
+        formControlName="username" 
+        placeholder="Enter username"
+        class="w-full"
+        [class.border-red-500]="getFieldError('username')"
+      />
+      @if (getFieldError('username')) {
+        <p class="text-sm text-red-600">{{ getFieldError('username') }}</p>
+      }
+    </div>
+
+    <!-- First Name -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">First Name</label>
+      <input 
+        type="text" 
+        pInputText 
+        formControlName="firstName" 
+        placeholder="Enter first name"
+        class="w-full"
+        [class.border-red-500]="getFieldError('firstName')"
+      />
+      @if (getFieldError('firstName')) {
+        <p class="text-sm text-red-600">{{ getFieldError('firstName') }}</p>
+      }
+    </div>
+
+    <!-- Last Name -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Last Name</label>
+      <input 
+        type="text" 
+        pInputText 
+        formControlName="lastName" 
+        placeholder="Enter last name"
+        class="w-full"
+        [class.border-red-500]="getFieldError('lastName')"
+      />
+      @if (getFieldError('lastName')) {
+        <p class="text-sm text-red-600">{{ getFieldError('lastName') }}</p>
+      }
+    </div>
+
+    <!-- Email -->
+    <div class="space-y-2">
+      <label class="block text-sm font-medium text-gray-700">Email</label>
+      <input 
+        type="email" 
+        pInputText 
+        formControlName="email" 
+        placeholder="Enter email address"
+        class="w-full"
+        [class.border-red-500]="getFieldError('email')"
+      />
+      @if (getFieldError('email')) {
+        <p class="text-sm text-red-600">{{ getFieldError('email') }}</p>
+      }
+    </div>
+
+    <!-- Submit Button -->
+    <div class="flex justify-end pt-4">
+      <p-button 
+        type="submit" 
+        [disabled]="saving() || form.invalid" 
+        severity="success" 
+        [loading]="saving()"
+        label="Save Changes">
+      </p-button>
+    </div>
+  </form>
+</div>
