@@ -16,7 +16,7 @@ public class UpdatePasswordCommandHandler(IUserRepository userRepository, IPassw
 		string hashedNew = hasher.HashPassword(request.Dto.NewPassword);
 		User? user = await userRepository.GetById(request.Id);
 		if (user == null)
-			throw new UserNotFoundException(request.Id);
+			throw new UserNotFoundException(request.Id.ToString());
 		if (!hasher.VerifyPassword(request.Dto.CurrentPassword, user.Password))
 			throw new InvalidPasswordException();
 		if (hasher.VerifyPassword(request.Dto.NewPassword, user.Password))

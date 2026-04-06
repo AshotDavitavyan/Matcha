@@ -1,3 +1,3 @@
 namespace Domain.Exceptions;
 
-public class UserNotFoundException(int id) : DomainException($"User with id {id} was not found.");
+public class UserNotFoundException(string identifier) : DomainException($"User '{identifier}' was not found.");
