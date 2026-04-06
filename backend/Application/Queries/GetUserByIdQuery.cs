@@ -1,5 +1,5 @@
 using Application.Dtos.UserDtos;
-using Domain.Entities;
+using Domain.Exceptions;
 using Domain.Repositories;
 using MediatR;
 
@@ -11,8 +11,8 @@ public class GetUserByIdQueryHandler(IUserRepository userRepository) : IRequestH
 {
 	public async Task<UserDto> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
 	{
-		var user = await userRepository.GetById(query.id);
-		return new  UserDto
+		var user = await userRepository.GetById(query.id) ?? throw new UserNotFoundException(query.id);
+		return new UserDto
 		{
 			Id = user.Id,
 			Username = user.Username,
