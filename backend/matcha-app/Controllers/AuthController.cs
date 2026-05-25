@@ -12,7 +12,7 @@ public class AuthController(IMediator mediator) : ControllerBase
 	[HttpPost("login")]
 	public async Task<IActionResult> Login([FromBody] LoginDto dto)
 	{
-		LoginCommand command = new LoginCommand(dto.username, dto.password);
+		LoginCommand command = new LoginCommand(dto.Username, dto.Password);
 		var result = await mediator.Send(command);
 		return Ok(result);
 	}

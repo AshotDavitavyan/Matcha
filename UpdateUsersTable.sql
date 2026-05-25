@@ -1,2 +1,0 @@
-ALTER TABLE Users
-ALTER COLUMN id TYPE INTEGER USING id::integer;
