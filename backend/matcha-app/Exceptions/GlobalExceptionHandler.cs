@@ -13,6 +13,11 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
             UserNotFoundException => StatusCodes.Status404NotFound,
             InvalidPasswordException => StatusCodes.Status422UnprocessableEntity,
             SamePasswordException => StatusCodes.Status422UnprocessableEntity,
+            InvalidRefreshTokenException => StatusCodes.Status401Unauthorized,
+            PictureLimitExceededException => StatusCodes.Status422UnprocessableEntity,
+            PictureNotFoundException => StatusCodes.Status404NotFound,
+            InvalidPictureUploadException => StatusCodes.Status422UnprocessableEntity,
+            DomainException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status500InternalServerError
         };
 

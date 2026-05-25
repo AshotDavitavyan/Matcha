@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Domain.Entities;
 
 public class User
@@ -8,6 +10,10 @@ public class User
    public string Email { get; set; }
    public string FirstName { get; set; }
    public string LastName { get; set; }
+   
+   public string? Biography { get; set; }
+   public Gender? Gender { get; set; }
+   public SexualPreference? SexualPreference  { get; set; }
    public string? RefreshToken { get; set; }
    public DateTime RefreshTokenExpiry { get; set; }
 }

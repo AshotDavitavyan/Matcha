@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Application.Commands;
 using Application.Dtos;
 using Application.Dtos.UserDtos;
@@ -39,21 +40,70 @@ public class UsersController (IMediator mediator) : ControllerBase
     {
         return Ok(await mediator.Send(query));
     }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
-    {
-        var command = new UpdateUserCommand(id, dto);
-        return Ok(await mediator.Send(command));
-    }
-
+    
     [HttpPut("{id}/password")]
     public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
     {
-        var command = new UpdatePasswordCommand(
-            id,
-            dto);
+        var command = new UpdatePasswordCommand(id, dto);
         await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpGet("{id}/profile")]
+    public async Task<IActionResult> GetProfile(int id)
+    {
+        var query = new GetUserProfileQuery(id);
+        return Ok(await mediator.Send(query));
+    }
+
+    [HttpPut("{id}/profile")]
+    public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateUserProfileDto dto)
+    {
+        var command = new UpdateProfileCommand(id, dto);
+        await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/pictures")]
+    public async Task<IActionResult> AddPicture(int id, IFormFile file, CancellationToken token)
+    {
+        string? userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int authenticatedUserId) || authenticatedUserId != id)
+        {
+            return Forbid();
+        }
+
+        await using Stream stream = file.OpenReadStream();
+        AddPictureCommand command = new AddPictureCommand(id, stream, file.FileName, file.ContentType, (int)file.Length);
+        int pictureId = await mediator.Send(command, token);
+        return Created($"/users/{id}/pictures/{pictureId}", pictureId);
+    }
+    
+    [HttpDelete("{userId}/pictures/{pictureId}")]
+    public async Task<IActionResult> DeletePicture(int userId, int pictureId, CancellationToken token)
+    {
+        string? userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int authenticatedUserId) || authenticatedUserId != userId)
+        {
+            return Forbid();
+        }
+        
+        DeletePictureCommand command = new DeletePictureCommand(userId, pictureId);
+        await mediator.Send(command, token);
+        return NoContent();
+    }
+
+    [HttpPut("{userId}/pictures/{pictureId}/profile")]
+    public async Task<IActionResult> SetPfp(int userId, int pictureId, CancellationToken token)
+    {
+        string? userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int authenticatedUserId) || authenticatedUserId != userId)
+        {
+            return Forbid();
+        }
+
+        SetProfilePictureCommand command = new SetProfilePictureCommand(userId, pictureId);
+        await mediator.Send(command, token);
         return NoContent();
     }
 }

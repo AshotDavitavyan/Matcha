@@ -1,3 +1,3 @@
 namespace Application.Dtos.AuthDtos;
 
-public record LoginDto(string username, string password);
+public record LoginDto(string Username, string Password);

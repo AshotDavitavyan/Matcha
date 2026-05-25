@@ -6,8 +6,11 @@ using Domain.Repositories;
 using Infrastructure.Database;
 using Infrastructure.Repositories;
 using Infrastructure.Security;
+using Infrastructure.Storage;
+using matcha_app.Authorization;
 using matcha_app.Exceptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -48,14 +51,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CompleteProfile", policy =>
+    {
+        policy.Requirements.Add(new CompleteProfileRequirement());
+    });
+});
+
 
 builder.Services.AddMediatR(c => c.RegisterServicesFromAssembly(typeof(CreateUserCommand).Assembly));
 builder.Services.AddSingleton(new DbConnectionFactory(connectionString));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddScoped<IPictureStorage, DiskPictureStorage>();
+builder.Services.AddScoped<IAuthorizationHandler, CompleteProfileHandler>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -68,6 +79,8 @@ app.UseCors("AllowSpecificOrigin");
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
+
 app.UseAuthentication();
 
 app.UseAuthorization();
@@ -77,7 +90,7 @@ app.MapControllers();
 app.MapScalarApiReference(options =>
 {
     options.Title = "My API Reference";
-    options.Theme = ScalarTheme.Moon; // Options: Default, Mars, Moon, Solar
+    options.Theme = ScalarTheme.Moon;
 });
 
 app.Run();
