@@ -13,7 +13,7 @@ public class UpdateProfileCommandHandler(IUserRepository userRepository)
 {
 	public async Task Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
 	{
-		UserProfile profile = new UserProfile
+		var profile = new UserProfile
 		{
 			Id = command.Id,
 			FirstName = command.UserProfileDto.FirstName,
