@@ -21,4 +21,7 @@ public interface IUserRepository
     Task SetProfilePicture(int userId, int pictureId);
     Task<bool> IsProfileComplete(int userId);
     Task ClearRefreshToken(int userId);
+    Task LikeUser(int likerId, int likedId);
+    Task UnlikeUser(int likerId, int likedId);
+    Task<bool> HasUserLiked(int likerId, int likedId);
 }
