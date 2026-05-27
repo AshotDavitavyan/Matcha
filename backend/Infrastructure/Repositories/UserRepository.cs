@@ -13,7 +13,7 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand(
+        await using var sql = new NpgsqlCommand(
             "INSERT INTO users (Username, FirstName, LastName, Email, Password)" +
                     "VALUES (@Username, @FirstName, @LastName, @Email, @Password) " + 
                     "RETURNING Id;", conn);
@@ -31,8 +31,8 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
         List<User> users = new List<User>();
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand(
-            "SELECT id, username, firstname, lastname, email, biography, gender, sexual_preferences FROM users;", conn);
+        await using var sql = new NpgsqlCommand(
+            "SELECT id, username, firstname, lastname, email FROM users;", conn);
         await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
@@ -43,9 +43,6 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
                 FirstName = reader.GetString(2),
                 LastName = reader.GetString(3),
                 Email = reader.GetString(4),
-                Biography = reader.IsDBNull(5) ? null : reader.GetString(5),
-                Gender = reader.IsDBNull(6) ? null : Enum.Parse<Gender>(reader.GetString(6), true),
-                SexualPreference = reader.IsDBNull(7) ? null : Enum.Parse<SexualPreference>(reader.GetString(7), true)
             });
         }
         return users;
@@ -55,8 +52,8 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand(
-            "SELECT id, username, firstname, lastname, email, biography, gender, sexual_preferences, password FROM users WHERE Id = @Id;", conn);
+        await using var sql = new NpgsqlCommand(
+            "SELECT id, username, firstname, lastname, email, password FROM users WHERE Id = @Id;", conn);
         sql.Parameters.AddWithValue("@Id", id);
         await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
         if (await reader.ReadAsync())
@@ -68,10 +65,7 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
                 FirstName = reader.GetString(2),
                 LastName = reader.GetString(3),
                 Email = reader.GetString(4),
-                Biography = reader.IsDBNull(5) ? null : reader.GetString(5),
-                Gender = reader.IsDBNull(6) ? null : Enum.Parse<Gender>(reader.GetString(6), true),
-                SexualPreference = reader.IsDBNull(7) ? null : Enum.Parse<SexualPreference>(reader.GetString(7), true),
-                Password = reader.GetString(8)
+                Password = reader.GetString(5)
             };
         }
         return null;
@@ -81,7 +75,7 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand(
+        await using var sql = new NpgsqlCommand(
             "UPDATE users SET Password = @Password WHERE Id = @Id;", conn);
         sql.Parameters.AddWithValue("@Password", hashedNew);
         sql.Parameters.AddWithValue("@Id", requestId);
@@ -92,7 +86,7 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand(
+        await using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email, password FROM users WHERE username = @username;", conn);
         sql.Parameters.AddWithValue("@username", username);
         await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
@@ -115,7 +109,7 @@ public class UserRepository(DbConnectionFactory factory) : IUserRepository
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand(
+        await using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email, password, refresh_token, refresh_token_expiry FROM users WHERE refresh_token = @refreshToken;",
             conn);
         sql.Parameters.AddWithValue("@refreshToken", requestRefreshToken);
@@ -143,7 +137,7 @@ public async Task<UserProfile?> GetUserProfile(int id)
     UserProfile? profile = null;
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand("SELECT u.id, u.username, u.firstname, u.lastname, u.email, u.biography, u.gender, u.sexual_preferences, array_agg(t.name) " +
+        await using var sql = new NpgsqlCommand("SELECT u.id, u.username, u.firstname, u.lastname, u.email, u.biography, u.gender, u.sexual_preferences, array_agg(t.name) " +
                                                 "FILTER (WHERE t.name IS NOT NULL) " +
                                                 "FROM users u " +
                                                 "LEFT JOIN user_tags ut ON ut.user_id = u.id " +
@@ -176,7 +170,7 @@ public async Task<UserProfile?> GetUserProfile(int id)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql =
+        await using var sql =
             new NpgsqlCommand(
                 "UPDATE users SET refresh_token = @refreshToken, refresh_token_expiry = @refreshTokenExpiry WHERE id = @id;" ,
                 conn);
@@ -193,7 +187,7 @@ public async Task<UserProfile?> GetUserProfile(int id)
         await conn.OpenAsync();
         await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
         
-        await using NpgsqlCommand updateUser = new NpgsqlCommand("UPDATE users SET firstname = @firstname, lastname = @lastname, email = @email, gender = @gender::gender_type, sexual_preferences = @sexual_preferences::sexual_preference_type, biography = @biography WHERE id = @id;", conn, transaction);
+        await using var updateUser = new NpgsqlCommand("UPDATE users SET firstname = @firstname, lastname = @lastname, email = @email, gender = @gender::gender_type, sexual_preferences = @sexual_preferences::sexual_preference_type, biography = @biography WHERE id = @id;", conn, transaction);
         updateUser.Parameters.AddWithValue("@firstname", profile.FirstName);
         updateUser.Parameters.AddWithValue("@lastname", profile.LastName);
         updateUser.Parameters.AddWithValue("@email", profile.Email);
@@ -203,18 +197,18 @@ public async Task<UserProfile?> GetUserProfile(int id)
         updateUser.Parameters.AddWithValue("@id", profile.Id);
         
         List<string> valueClauses = profile.Tags.Select((_, i) => $"(@name{i})").ToList();
-        await using NpgsqlCommand upsertTags = new NpgsqlCommand($"INSERT INTO tags (name) VALUES {string.Join(", ", valueClauses)} " +
+        await using var upsertTags = new NpgsqlCommand($"INSERT INTO tags (name) VALUES {string.Join(", ", valueClauses)} " +
                                                                          $"ON CONFLICT (name) DO NOTHING", conn, transaction);
         for (int i = 0; i < valueClauses.Count; i++)
             upsertTags.Parameters.AddWithValue($"@name{i}", profile.Tags[i]);
         
-        await using NpgsqlCommand deleteUserTags = new NpgsqlCommand($"DELETE FROM user_tags " +
+        await using var deleteUserTags = new NpgsqlCommand($"DELETE FROM user_tags " +
                                                                              $"WHERE user_id = @userId " +
                                                                              $"AND tag_id NOT IN (SELECT id FROM tags WHERE name = ANY (@names))", conn, transaction);
         deleteUserTags.Parameters.AddWithValue("@userId", profile.Id);
         deleteUserTags.Parameters.AddWithValue("@names", profile.Tags.ToArray());
         
-        await using NpgsqlCommand insertUserTags = new NpgsqlCommand(
+        await using var insertUserTags = new NpgsqlCommand(
             $"INSERT INTO user_tags (user_id, tag_id) " +
                     $"SELECT @user_id, id FROM tags WHERE name = ANY(@tags) ON CONFLICT (user_id, tag_id) DO NOTHING", conn, transaction);
         insertUserTags.Parameters.AddWithValue("@user_id", profile.Id);
@@ -293,7 +287,7 @@ public async Task<UserProfile?> GetUserProfile(int id)
         List<Picture> pictures = new List<Picture>();
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand sql = new NpgsqlCommand($"SELECT * FROM user_pictures WHERE user_id = @userId", conn);
+        await using var sql = new NpgsqlCommand($"SELECT * FROM user_pictures WHERE user_id = @userId", conn);
         sql.Parameters.AddWithValue("@userId", userId);
         
         await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
@@ -314,18 +308,18 @@ public async Task<UserProfile?> GetUserProfile(int id)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand getPictures = new NpgsqlCommand("SELECT COUNT(*) FROM user_pictures WHERE user_id = @userId", conn);
+        await using var getPictures = new NpgsqlCommand("SELECT COUNT(*) FROM user_pictures WHERE user_id = @userId", conn);
         getPictures.Parameters.AddWithValue("@userId", userId);
         long count = (long)await getPictures.ExecuteScalarAsync();
         if (count >= 5)
         {
             throw new PictureLimitExceededException();
         }
-        await using NpgsqlCommand insertPictures = new NpgsqlCommand("INSERT INTO user_pictures (user_id, url, is_pfp) VALUES (@userId, @url, @isPfp) RETURNING id", conn);
+        await using var insertPictures = new NpgsqlCommand("INSERT INTO user_pictures (user_id, url, is_pfp) VALUES (@userId, @url, @isPfp) RETURNING id", conn);
         insertPictures.Parameters.AddWithValue("@userId", userId);
         insertPictures.Parameters.AddWithValue("@url", url);
         insertPictures.Parameters.AddWithValue("@isPfp", count == 0);
-        var res = (int)(await insertPictures.ExecuteScalarAsync())!;
+        int res = (int)(await insertPictures.ExecuteScalarAsync())!;
         return res;
     }
     
@@ -334,11 +328,11 @@ public async Task<UserProfile?> GetUserProfile(int id)
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
         await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
-        await using NpgsqlCommand deletePicture =
+        await using var deletePicture =
             new NpgsqlCommand("DELETE FROM user_pictures WHERE user_id = @userId AND id = @id RETURNING url, is_pfp", conn, transaction);
         deletePicture.Parameters.AddWithValue("@userId", userId);
         deletePicture.Parameters.AddWithValue("@id", pictureId);
-        await using NpgsqlCommand updatePfp = new NpgsqlCommand("UPDATE user_pictures SET is_pfp = true WHERE id = (SELECT id FROM user_pictures WHERE user_id = @userId ORDER BY id LIMIT 1)", conn, transaction);
+        await using var updatePfp = new NpgsqlCommand("UPDATE user_pictures SET is_pfp = true WHERE id = (SELECT id FROM user_pictures WHERE user_id = @userId ORDER BY id LIMIT 1)", conn, transaction);
         updatePfp.Parameters.AddWithValue("@userId", userId);
         try
         {
@@ -369,10 +363,10 @@ public async Task<UserProfile?> GetUserProfile(int id)
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
         await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
-        await using NpgsqlCommand unsetPfp = new NpgsqlCommand(
+        await using var unsetPfp = new NpgsqlCommand(
             "UPDATE user_pictures SET is_pfp = false WHERE user_id = @userId AND is_pfp = true", conn, transaction);
         unsetPfp.Parameters.AddWithValue("@userId", userId);
-        await using NpgsqlCommand setPfp = new NpgsqlCommand("UPDATE user_pictures SET is_pfp = true WHERE user_id = @userId AND id = @pictureId", conn, transaction);
+        await using var setPfp = new NpgsqlCommand("UPDATE user_pictures SET is_pfp = true WHERE user_id = @userId AND id = @pictureId", conn, transaction);
         setPfp.Parameters.AddWithValue("@pictureId", pictureId);
         setPfp.Parameters.AddWithValue("@userId", userId);
 
@@ -396,7 +390,7 @@ public async Task<UserProfile?> GetUserProfile(int id)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using NpgsqlCommand command = new NpgsqlCommand("SELECT EXISTS (" +
+        await using var command = new NpgsqlCommand("SELECT EXISTS (" +
                                                               "SELECT 1 FROM users u " +
                                                               "WHERE u.id = @userId " +
                                                               "AND u.biography IS NOT NULL " +

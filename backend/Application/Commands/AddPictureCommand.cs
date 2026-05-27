@@ -7,7 +7,7 @@ namespace Application.Commands;
 
 public record AddPictureCommand(int UserId, Stream Stream, string Filename, string ContentType, int ByteLength) : IRequest<int>;
 
-public class AddPictureCommandHandler(IPictureStorage storage, IUserRepository repository) : IRequestHandler<AddPictureCommand, int>
+public class AddPictureCommandHandler(IPictureStorage storage, IUserRepository userRepository) : IRequestHandler<AddPictureCommand, int>
 {
 	const int MaxPictureMegabytes = 5;
 	const int MaxPictureBytes = MaxPictureMegabytes * 1024 * 1024;
@@ -38,7 +38,7 @@ public class AddPictureCommandHandler(IPictureStorage storage, IUserRepository r
 		string url = await storage.Save(request.Stream, request.Filename, request.ContentType, cancellationToken);
 		try
 		{
-			int id = await repository.AddPicture(request.UserId, url);
+			int id = await userRepository.AddPicture(request.UserId, url);
 			return id;
 		}
 		catch (Exception ex) when (!(ex is OperationCanceledException))

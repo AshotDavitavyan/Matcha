@@ -74,7 +74,7 @@ public class UsersController (IMediator mediator) : ControllerBase
         }
 
         await using Stream stream = file.OpenReadStream();
-        AddPictureCommand command = new AddPictureCommand(id, stream, file.FileName, file.ContentType, (int)file.Length);
+        var command = new AddPictureCommand(id, stream, file.FileName, file.ContentType, (int)file.Length);
         int pictureId = await mediator.Send(command, token);
         return Created($"/users/{id}/pictures/{pictureId}", pictureId);
     }
@@ -88,7 +88,7 @@ public class UsersController (IMediator mediator) : ControllerBase
             return Forbid();
         }
         
-        DeletePictureCommand command = new DeletePictureCommand(userId, pictureId);
+        var command = new DeletePictureCommand(userId, pictureId);
         await mediator.Send(command, token);
         return NoContent();
     }
@@ -102,7 +102,7 @@ public class UsersController (IMediator mediator) : ControllerBase
             return Forbid();
         }
 
-        SetProfilePictureCommand command = new SetProfilePictureCommand(userId, pictureId);
+        var command = new SetProfilePictureCommand(userId, pictureId);
         await mediator.Send(command, token);
         return NoContent();
     }
