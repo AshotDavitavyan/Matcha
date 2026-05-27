@@ -10,13 +10,14 @@ public class GlobalExceptionHandler(IProblemDetailsService problemDetailsService
     {
         var statusCode = exception switch
         {
+            InvalidRefreshTokenException => StatusCodes.Status401Unauthorized,
             UserNotFoundException => StatusCodes.Status404NotFound,
+            PictureNotFoundException => StatusCodes.Status404NotFound,
             InvalidPasswordException => StatusCodes.Status422UnprocessableEntity,
             SamePasswordException => StatusCodes.Status422UnprocessableEntity,
-            InvalidRefreshTokenException => StatusCodes.Status401Unauthorized,
             PictureLimitExceededException => StatusCodes.Status422UnprocessableEntity,
-            PictureNotFoundException => StatusCodes.Status404NotFound,
             InvalidPictureUploadException => StatusCodes.Status422UnprocessableEntity,
+            SelfLikeException => StatusCodes.Status422UnprocessableEntity,
             DomainException => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status500InternalServerError
         };

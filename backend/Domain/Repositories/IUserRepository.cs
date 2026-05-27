@@ -20,4 +20,7 @@ public interface IUserRepository
     Task<string> RemovePicture(int userId, int pictureId);
     Task SetProfilePicture(int userId, int pictureId);
     Task<bool> IsProfileComplete(int userId);
+    Task LikeUser(int likerId, int likedId);
+    Task UnlikeUser(int likerId, int likedId);
+    Task<bool> HasUserLiked(int likerId, int likedId);
 }
