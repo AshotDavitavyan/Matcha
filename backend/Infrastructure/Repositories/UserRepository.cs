@@ -403,4 +403,15 @@ public async Task<UserProfile?> GetUserProfile(int id)
         bool? res = (bool?)await command.ExecuteScalarAsync();
         return res ?? false;
     }
+
+    public async Task ClearRefreshToken(int userId)
+    {
+        await using NpgsqlConnection conn = factory.CreateConnection();
+        await conn.OpenAsync();
+        await using var command =
+            new NpgsqlCommand("UPDATE users SET refresh_token = NULL, refresh_token_expiry = NULL WHERE id = @userId;",
+                conn);
+        command.Parameters.AddWithValue("@userId", userId);
+        await command.ExecuteNonQueryAsync();
+    }
 }
