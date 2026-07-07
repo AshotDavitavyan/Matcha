@@ -11,7 +11,7 @@ public class DeletePictureCommandHandlerTests
 	[Fact]
 	public async Task Handle_ExistingPicture_RemovesDbRowAndDeletesFile()
 	{
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var storage = Substitute.For<IPictureStorage>();
 		var handler = new DeletePictureCommandHandler(repository, storage);
 		var command = new DeletePictureCommand(1, 10);
@@ -30,7 +30,7 @@ public class DeletePictureCommandHandlerTests
 	[Fact]
 	public async Task Handle_PictureNotFound_DoesNotDeleteFile()
 	{
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var storage = Substitute.For<IPictureStorage>();
 		var handler = new DeletePictureCommandHandler(repository, storage);
 		var command = new DeletePictureCommand(1, 10);

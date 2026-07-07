@@ -7,11 +7,11 @@ namespace Application.Queries;
 
 public record GetUserByIdQuery(int id) : IRequest<UserDto>;
 
-public class GetUserByIdQueryHandler(IUserRepository userRepository) : IRequestHandler<GetUserByIdQuery, UserDto>
+public class GetUserByIdQueryHandler(IUserAccountRepository userAccountRepository) : IRequestHandler<GetUserByIdQuery, UserDto>
 {
 	public async Task<UserDto> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
 	{
-		var user = await userRepository.GetById(query.id) ?? throw new UserNotFoundException(query.id.ToString());
+		var user = await userAccountRepository.GetById(query.id) ?? throw new UserNotFoundException(query.id.ToString());
 		return new UserDto
 		{
 			Id = user.Id,

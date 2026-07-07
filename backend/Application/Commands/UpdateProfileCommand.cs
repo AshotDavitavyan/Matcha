@@ -8,7 +8,7 @@ namespace Application.Commands;
 
 public record UpdateProfileCommand(int Id, UpdateUserProfileDto UserProfileDto) : IRequest;
 
-public class UpdateProfileCommandHandler(IUserRepository userRepository)
+public class UpdateProfileCommandHandler(IUserProfileRepository userProfileRepository)
 	: IRequestHandler<UpdateProfileCommand>
 {
 	public async Task Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
@@ -24,6 +24,6 @@ public class UpdateProfileCommandHandler(IUserRepository userRepository)
 			SexualPreference = command.UserProfileDto.SexualPreference,
 			Tags = command.UserProfileDto.Tags
 		};
-		await userRepository.UpdateProfile(profile);
+		await userProfileRepository.UpdateProfile(profile);
 	}
 }

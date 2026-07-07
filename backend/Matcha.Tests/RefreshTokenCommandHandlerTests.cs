@@ -13,7 +13,7 @@ public class RefreshTokenCommandHandlerTests
 	[Fact]
 	public async Task Handle_ValidRefresh_Ok()
 	{
-		var userRepository = Substitute.For<IUserRepository>();
+		var userRepository = Substitute.For<IAuthRepository>();
 		var tokenService = Substitute.For<ITokenService>();
 		var configuration = Substitute.For<IConfiguration>();
 
@@ -41,7 +41,7 @@ public class RefreshTokenCommandHandlerTests
 	[Fact]
 	public async Task Handle_InvalidRefresh_Invalid()
 	{
-		var userRepository = Substitute.For<IUserRepository>();
+		var userRepository = Substitute.For<IAuthRepository>();
 		var tokenService = Substitute.For<ITokenService>();
 		var configuration = Substitute.For<IConfiguration>();
 		
@@ -54,7 +54,7 @@ public class RefreshTokenCommandHandlerTests
 	[Fact]
 	public async Task Handle_ExpiredRefresh_Invalid()
 	{
-		var userRepository = Substitute.For<IUserRepository>();
+		var userRepository = Substitute.For<IAuthRepository>();
 		var tokenService = Substitute.For<ITokenService>();
 		var configuration = Substitute.For<IConfiguration>();
 

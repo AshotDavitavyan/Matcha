@@ -22,7 +22,7 @@ public class AddPictureCommandHandlerTests
 	public async Task Handle_EmptyFile_ThrowsInvalidPictureUpload()
 	{
 		var storage = Substitute.For<IPictureStorage>();
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new AddPictureCommandHandler(storage, repository);
 
 		await Assert.ThrowsAsync<InvalidPictureUploadException>(() =>
@@ -36,7 +36,7 @@ public class AddPictureCommandHandlerTests
 	public async Task Handle_FileTooLarge_ThrowsInvalidPictureUpload()
 	{
 		var storage = Substitute.For<IPictureStorage>();
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new AddPictureCommandHandler(storage, repository);
 
 		await Assert.ThrowsAsync<InvalidPictureUploadException>(() =>
@@ -50,7 +50,7 @@ public class AddPictureCommandHandlerTests
 	public async Task Handle_UnsupportedContentType_ThrowsInvalidPictureUpload()
 	{
 		var storage = Substitute.For<IPictureStorage>();
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new AddPictureCommandHandler(storage, repository);
 		var command = ValidCommand() with { ContentType = "image/gif" };
 
@@ -65,7 +65,7 @@ public class AddPictureCommandHandlerTests
 	public async Task Handle_UnsupportedExtension_ThrowsInvalidPictureUpload()
 	{
 		var storage = Substitute.For<IPictureStorage>();
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new AddPictureCommandHandler(storage, repository);
 		var command = ValidCommand() with { Filename = "profile.gif" };
 
@@ -80,7 +80,7 @@ public class AddPictureCommandHandlerTests
 	public async Task Handle_ValidUpload_SavesFileAddsPictureAndReturnsId()
 	{
 		var storage = Substitute.For<IPictureStorage>();
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new AddPictureCommandHandler(storage, repository);
 		var command = ValidCommand();
 
@@ -100,7 +100,7 @@ public class AddPictureCommandHandlerTests
 	public async Task Handle_RepositoryFailsAfterSave_DeletesSavedFileAndRethrows()
 	{
 		var storage = Substitute.For<IPictureStorage>();
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new AddPictureCommandHandler(storage, repository);
 		var command = ValidCommand();
 
