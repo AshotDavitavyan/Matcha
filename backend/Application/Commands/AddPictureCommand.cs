@@ -7,7 +7,7 @@ namespace Application.Commands;
 
 public record AddPictureCommand(int UserId, Stream Stream, string Filename, string ContentType, int ByteLength) : IRequest<int>;
 
-public class AddPictureCommandHandler(IPictureStorage storage, IUserRepository userRepository) : IRequestHandler<AddPictureCommand, int>
+public class AddPictureCommandHandler(IPictureStorage storage, IUserPictureRepository userRepository) : IRequestHandler<AddPictureCommand, int>
 {
 	const int MaxPictureMegabytes = 5;
 	const int MaxPictureBytes = MaxPictureMegabytes * 1024 * 1024;

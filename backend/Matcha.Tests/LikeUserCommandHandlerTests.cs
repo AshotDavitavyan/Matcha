@@ -11,8 +11,9 @@ public class LikeUserCommandHandlerTests
 	[Fact]
 	public async Task Handle_SelfLike_Throws()
 	{
-		var repository = Substitute.For<IUserRepository>();
-		var handler = new LikeUserCommandHandler(repository);
+		var repository = Substitute.For<ILikeRepository>();
+		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var handler = new LikeUserCommandHandler(repository, accountRepository);
 		var command = new LikeUserCommand(1, 1);
 
 		await Assert.ThrowsAsync<SelfLikeException>(() =>
@@ -25,56 +26,59 @@ public class LikeUserCommandHandlerTests
 	[Fact]
 	public async Task Handle_LikedUserNotFound_Throws()
 	{
-		var repository = Substitute.For<IUserRepository>();
-		var handler = new LikeUserCommandHandler(repository);
+		var likeRepository = Substitute.For<ILikeRepository>();
+		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
-		repository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId)
 			.Returns(Task.FromResult<User?>(null));
 
 		await Assert.ThrowsAsync<UserNotFoundException>(() =>
 			handler.Handle(command, CancellationToken.None));
 
-		await repository.DidNotReceiveWithAnyArgs().LikeUser(default, default);
-		await repository.DidNotReceiveWithAnyArgs().HasUserLiked(default, default);
+		await likeRepository.DidNotReceiveWithAnyArgs().LikeUser(default, default);
+		await likeRepository.DidNotReceiveWithAnyArgs().HasUserLiked(default, default);
 	}
 
 	[Fact]
 	public async Task Handle_ReverseLikeDoesNotExist_ReturnsFalse()
 	{
-		var repository = Substitute.For<IUserRepository>();
-		var handler = new LikeUserCommandHandler(repository);
+		var likeRepository = Substitute.For<ILikeRepository>();
+		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
-		repository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId)
 			.Returns(Task.FromResult<User?>(CreateUser(command.LikedId)));
-		repository.HasUserLiked(command.LikedId, command.LikerId)
+		likeRepository.HasUserLiked(command.LikedId, command.LikerId)
 			.Returns(Task.FromResult(false));
 
 		bool matched = await handler.Handle(command, CancellationToken.None);
 
 		Assert.False(matched);
-		await repository.Received(1).LikeUser(command.LikerId, command.LikedId);
-		await repository.Received(1).HasUserLiked(command.LikedId, command.LikerId);
+		await likeRepository.Received(1).LikeUser(command.LikerId, command.LikedId);
+		await likeRepository.Received(1).HasUserLiked(command.LikedId, command.LikerId);
 	}
 
 	[Fact]
 	public async Task Handle_ReverseLikeExists_ReturnsTrue()
 	{
-		var repository = Substitute.For<IUserRepository>();
-		var handler = new LikeUserCommandHandler(repository);
+		var likeRepository = Substitute.For<ILikeRepository>();
+		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
-		repository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId)
 			.Returns(Task.FromResult<User?>(CreateUser(command.LikedId)));
-		repository.HasUserLiked(command.LikedId, command.LikerId)
+		likeRepository.HasUserLiked(command.LikedId, command.LikerId)
 			.Returns(Task.FromResult(true));
 
 		bool matched = await handler.Handle(command, CancellationToken.None);
 
 		Assert.True(matched);
-		await repository.Received(1).LikeUser(command.LikerId, command.LikedId);
-		await repository.Received(1).HasUserLiked(command.LikedId, command.LikerId);
+		await likeRepository.Received(1).LikeUser(command.LikerId, command.LikedId);
+		await likeRepository.Received(1).HasUserLiked(command.LikedId, command.LikerId);
 	}
 
 	private static User CreateUser(int id)

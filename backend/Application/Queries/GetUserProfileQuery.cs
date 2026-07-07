@@ -7,11 +7,11 @@ namespace Application.Queries;
 
 public record GetUserProfileQuery(int Id) : IRequest<UserProfileDto?>;
 
-public class GetUserProfileQueryHandler(IUserRepository userRepository) : IRequestHandler<GetUserProfileQuery, UserProfileDto?>
+public class GetUserProfileQueryHandler(IUserProfileRepository userProfileRepository) : IRequestHandler<GetUserProfileQuery, UserProfileDto?>
 {
 	public async Task<UserProfileDto?> Handle(GetUserProfileQuery query, CancellationToken cancellationToken)
 	{
-		var userProfile = await userRepository.GetUserProfile(query.Id) ?? throw new UserNotFoundException(query.Id.ToString());
+		var userProfile = await userProfileRepository.GetUserProfile(query.Id) ?? throw new UserNotFoundException(query.Id.ToString());
 		return new UserProfileDto
 		{
 			Id = userProfile.Id,

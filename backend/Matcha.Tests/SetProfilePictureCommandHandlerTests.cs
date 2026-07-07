@@ -10,7 +10,7 @@ public class SetProfilePictureCommandHandlerTests
 	[Fact]
 	public async Task Handle_ExistingPicture_CallsRepository()
 	{
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new SetProfilePictureCommandHandler(repository);
 		var command = new SetProfilePictureCommand(1, 10);
 
@@ -22,7 +22,7 @@ public class SetProfilePictureCommandHandlerTests
 	[Fact]
 	public async Task Handle_PictureNotFound_Rethrows()
 	{
-		var repository = Substitute.For<IUserRepository>();
+		var repository = Substitute.For<IUserPictureRepository>();
 		var handler = new SetProfilePictureCommandHandler(repository);
 		var command = new SetProfilePictureCommand(1, 10);
 

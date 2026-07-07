@@ -13,7 +13,7 @@ public record CreateUserCommand(
     string Password
     ) : IRequest<int>;
 
-public class CreateUserCommandHandler (IUserRepository userRepository, IPasswordHasher hasher) : IRequestHandler<CreateUserCommand, int>
+public class CreateUserCommandHandler (IUserAccountRepository userAccountRepository, IPasswordHasher hasher) : IRequestHandler<CreateUserCommand, int>
 {
     public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
@@ -27,7 +27,7 @@ public class CreateUserCommandHandler (IUserRepository userRepository, IPassword
             Password = hashedPassword
         };
 
-        int id = await userRepository.Create(user);
+        int id = await userAccountRepository.Create(user);
         return id;
     }
 }

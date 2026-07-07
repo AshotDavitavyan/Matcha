@@ -6,7 +6,7 @@ namespace Application.Commands;
 
 public record DeletePictureCommand(int UserId, int PictureId) : IRequest;
 
-public class DeletePictureCommandHandler(IUserRepository userRepository, IPictureStorage storage) : IRequestHandler<DeletePictureCommand>
+public class DeletePictureCommandHandler(IUserPictureRepository userRepository, IPictureStorage storage) : IRequestHandler<DeletePictureCommand>
 {
 	public async Task Handle(DeletePictureCommand request, CancellationToken cancellationToken)
 	{

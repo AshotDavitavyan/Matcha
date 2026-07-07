@@ -7,7 +7,7 @@ namespace Application.Commands;
 
 public record LikeUserCommand(int LikerId, int LikedId) : IRequest<bool>;
 
-public class LikeUserCommandHandler(IUserRepository userRepository) : IRequestHandler<LikeUserCommand, bool>
+public class LikeUserCommandHandler(ILikeRepository likeRepository, IUserAccountRepository userAccountRepository) : IRequestHandler<LikeUserCommand, bool>
 {
 	public async Task<bool> Handle(LikeUserCommand request, CancellationToken cancellationToken)
 	{
@@ -16,12 +16,12 @@ public class LikeUserCommandHandler(IUserRepository userRepository) : IRequestHa
 			throw new SelfLikeException();
 		}
 
-		if (await userRepository.GetById(request.LikedId) == null)
+		if (await userAccountRepository.GetById(request.LikedId) == null)
 		{
 			throw new UserNotFoundException(request.LikedId.ToString());
 		}
 
-		await userRepository.LikeUser(request.LikerId, request.LikedId);
-		return await userRepository.HasUserLiked(request.LikedId, request.LikerId);
+		await likeRepository.LikeUser(request.LikerId, request.LikedId);
+		return await likeRepository.HasUserLiked(request.LikedId, request.LikerId);
 	}
 }

@@ -5,7 +5,7 @@ namespace Application.Commands;
 
 public record SetProfilePictureCommand(int UserId, int PictureId) : IRequest;
 
-public class SetProfilePictureCommandHandler(IUserRepository userRepository)
+public class SetProfilePictureCommandHandler(IUserPictureRepository userRepository)
 	: IRequestHandler<SetProfilePictureCommand>
 {
 	public async Task Handle(SetProfilePictureCommand request, CancellationToken cancellationToken)

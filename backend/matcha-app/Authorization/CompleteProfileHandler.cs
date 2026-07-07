@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace matcha_app.Authorization;
 
-public class CompleteProfileHandler(IUserRepository userRepository) : AuthorizationHandler<CompleteProfileRequirement>
+public class CompleteProfileHandler(IUserProfileRepository userProfileRepository) : AuthorizationHandler<CompleteProfileRequirement>
 {
 	protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, CompleteProfileRequirement requirement)
 	{
@@ -13,7 +13,7 @@ public class CompleteProfileHandler(IUserRepository userRepository) : Authorizat
 		{
 			return;
 		}
-		bool isProfileComplete = await userRepository.IsProfileComplete(userId);
+		bool isProfileComplete = await userProfileRepository.IsProfileComplete(userId);
 		if (isProfileComplete)
 		{
 			context.Succeed(requirement);
