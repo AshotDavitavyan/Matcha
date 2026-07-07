@@ -488,3 +488,4 @@ $RECYCLE.BIN/
 # Markdown files (except README)
 *.md
 !README.md
+/matcha.subject.pdf

@@ -40,10 +40,15 @@ public class UsersController (IMediator mediator) : ControllerBase
     {
         return Ok(await mediator.Send(query));
     }
-    
+
     [HttpPut("{id}/password")]
     public async Task<IActionResult> UpdatePassword(int id, [FromBody] UpdatePasswordDto dto)
     {
+        string? userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int authenticatedUserId) || authenticatedUserId != id)
+        {
+            return Forbid();
+        }
         var command = new UpdatePasswordCommand(id, dto);
         await mediator.Send(command);
         return NoContent();
@@ -59,6 +64,11 @@ public class UsersController (IMediator mediator) : ControllerBase
     [HttpPut("{id}/profile")]
     public async Task<IActionResult> UpdateProfile(int id, [FromBody] UpdateUserProfileDto dto)
     {
+        string? userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int authenticatedUserId) || authenticatedUserId != id)
+        {
+            return Forbid();
+        }
         var command = new UpdateProfileCommand(id, dto);
         await mediator.Send(command);
         return NoContent();
@@ -78,7 +88,7 @@ public class UsersController (IMediator mediator) : ControllerBase
         int pictureId = await mediator.Send(command, token);
         return Created($"/users/{id}/pictures/{pictureId}", pictureId);
     }
-    
+
     [HttpDelete("{userId}/pictures/{pictureId}")]
     public async Task<IActionResult> DeletePicture(int userId, int pictureId, CancellationToken token)
     {
@@ -87,7 +97,7 @@ public class UsersController (IMediator mediator) : ControllerBase
         {
             return Forbid();
         }
-        
+
         var command = new DeletePictureCommand(userId, pictureId);
         await mediator.Send(command, token);
         return NoContent();
@@ -121,7 +131,7 @@ public class UsersController (IMediator mediator) : ControllerBase
         bool matched = await mediator.Send(command, token);
         return Ok(new { matched });
     }
-    
+
     [HttpDelete("{likerId}/likes/{likedId}")]
     public async Task<IActionResult> UnlikeUser(int likerId, int likedId, CancellationToken token)
     {
