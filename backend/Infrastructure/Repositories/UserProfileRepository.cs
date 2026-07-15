@@ -57,29 +57,40 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
         updateUser.Parameters.AddWithValue("@biography", profile.Biography ?? (object)DBNull.Value);
         updateUser.Parameters.AddWithValue("@id", profile.Id);
 
-        List<string> valueClauses = profile.Tags.Select((_, i) => $"(@name{i})").ToList();
-        await using var upsertTags = new NpgsqlCommand($"INSERT INTO tags (name) VALUES {string.Join(", ", valueClauses)} " +
-                                                                         $"ON CONFLICT (name) DO NOTHING", conn, transaction);
-        for (int i = 0; i < valueClauses.Count; i++)
-            upsertTags.Parameters.AddWithValue($"@name{i}", profile.Tags[i]);
-
-        await using var deleteUserTags = new NpgsqlCommand($"DELETE FROM user_tags " +
-                                                                             $"WHERE user_id = @userId " +
-                                                                             $"AND tag_id NOT IN (SELECT id FROM tags WHERE name = ANY (@names))", conn, transaction);
-        deleteUserTags.Parameters.AddWithValue("@userId", profile.Id);
-        deleteUserTags.Parameters.AddWithValue("@names", profile.Tags.ToArray());
-
-        await using var insertUserTags = new NpgsqlCommand(
-            $"INSERT INTO user_tags (user_id, tag_id) " +
-                    $"SELECT @user_id, id FROM tags WHERE name = ANY(@tags) ON CONFLICT (user_id, tag_id) DO NOTHING", conn, transaction);
-        insertUserTags.Parameters.AddWithValue("@user_id", profile.Id);
-        insertUserTags.Parameters.AddWithValue("@tags", profile.Tags.ToArray());
         try
         {
             await updateUser.ExecuteNonQueryAsync();
-            await upsertTags.ExecuteNonQueryAsync();
-            await deleteUserTags.ExecuteNonQueryAsync();
-            await insertUserTags.ExecuteNonQueryAsync();
+            if (profile.Tags.Count == 0)
+            {
+                await using var deleteAllUserTags =
+                    new NpgsqlCommand($"DELETE FROM user_tags WHERE user_id = @userId", conn, transaction);
+                deleteAllUserTags.Parameters.AddWithValue("@userId", profile.Id);
+                await deleteAllUserTags.ExecuteNonQueryAsync();
+            }
+            else
+            {
+                List<string> valueClauses = profile.Tags.Select((_, i) => $"(@name{i})").ToList();
+                await using var upsertTags = new NpgsqlCommand($"INSERT INTO tags (name) VALUES {string.Join(", ", valueClauses)} " +
+                                                               $"ON CONFLICT (name) DO NOTHING", conn, transaction);
+                for (int i = 0; i < valueClauses.Count; i++)
+                    upsertTags.Parameters.AddWithValue($"@name{i}", profile.Tags[i]);
+
+                await using var deleteUserTags = new NpgsqlCommand($"DELETE FROM user_tags " +
+                                                                   $"WHERE user_id = @userId " +
+                                                                   $"AND tag_id NOT IN (SELECT id FROM tags WHERE name = ANY (@names))", conn, transaction);
+                deleteUserTags.Parameters.AddWithValue("@userId", profile.Id);
+                deleteUserTags.Parameters.AddWithValue("@names", profile.Tags.ToArray());
+
+                await using var insertUserTags = new NpgsqlCommand(
+                    $"INSERT INTO user_tags (user_id, tag_id) " +
+                    $"SELECT @user_id, id FROM tags WHERE name = ANY(@tags) ON CONFLICT (user_id, tag_id) DO NOTHING", conn, transaction);
+                insertUserTags.Parameters.AddWithValue("@user_id", profile.Id);
+                insertUserTags.Parameters.AddWithValue("@tags", profile.Tags.ToArray());
+
+                await upsertTags.ExecuteNonQueryAsync();
+                await deleteUserTags.ExecuteNonQueryAsync();
+                await insertUserTags.ExecuteNonQueryAsync();
+            }
             await transaction.CommitAsync();
         }
         catch
