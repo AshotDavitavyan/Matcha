@@ -11,7 +11,6 @@ using matcha_app.Authorization;
 using matcha_app.Exceptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 

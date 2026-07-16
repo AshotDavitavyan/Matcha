@@ -7,14 +7,15 @@ namespace Infrastructure.Repositories;
 
 public class UserAccountRepository(DbConnectionFactory factory) : IUserAccountRepository
 {
-	    public async Task<int> Create(User user, CancellationToken token)
+    public async Task<int> Create(User user, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
-            "INSERT INTO users (Username, FirstName, LastName, Email, Password)" +
-                    "VALUES (@Username, @FirstName, @LastName, @Email, @Password) " +
-                    "RETURNING Id;", conn);
+            "INSERT INTO users (Username, FirstName, LastName, Email, Password) " +
+            "VALUES (@Username, @FirstName, @LastName, @Email, @Password) " +
+            "RETURNING Id;",
+            conn);
         sql.Parameters.AddWithValue("@Username", user.Username);
         sql.Parameters.AddWithValue("@FirstName", user.FirstName);
         sql.Parameters.AddWithValue("@LastName", user.LastName);
