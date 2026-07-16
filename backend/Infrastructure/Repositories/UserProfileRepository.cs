@@ -8,11 +8,11 @@ namespace Infrastructure.Repositories;
 
 public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepository pictureRepository) : IUserProfileRepository
 {
-	public async Task<UserProfile?> GetUserProfile(int id)
+	public async Task<UserProfile?> GetUserProfile(int id, CancellationToken token)
 {
     UserProfile? profile = null;
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand("SELECT u.id, u.username, u.firstname, u.lastname, u.email, u.biography, u.gender, u.sexual_preferences, array_agg(t.name) " +
                                                 "FILTER (WHERE t.name IS NOT NULL) " +
                                                 "FROM users u " +
@@ -21,8 +21,8 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
                                                 "WHERE u.id = @id " +
                                                 "GROUP BY u.id;", conn);
         sql.Parameters.AddWithValue("@id", id);
-        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
+        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync(token);
+        if (await reader.ReadAsync(token))
         {
             profile =  new UserProfile
             {
@@ -36,17 +36,17 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
                 SexualPreference = reader.IsDBNull(7) ? null : Enum.Parse<SexualPreference>(reader.GetString(7), true),
                 Tags = reader.IsDBNull(8) ? new List<string>() : reader.GetFieldValue<string[]>(8).ToList(),
             };
-            profile.Pictures = await pictureRepository.GetPicturesByUserId(profile.Id);
+            profile.Pictures = await pictureRepository.GetPicturesByUserId(profile.Id, token);
         }
 
         return profile;
     }
 
-    public async Task UpdateProfile(UserProfile profile)
+    public async Task UpdateProfile(UserProfile profile, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
-        await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
+        await conn.OpenAsync(token);
+        await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync(token);
 
         await using var updateUser = new NpgsqlCommand("UPDATE users SET firstname = @firstname, lastname = @lastname, email = @email, gender = @gender::gender_type, sexual_preferences = @sexual_preferences::sexual_preference_type, biography = @biography WHERE id = @id;", conn, transaction);
         updateUser.Parameters.AddWithValue("@firstname", profile.FirstName);
@@ -59,13 +59,13 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
 
         try
         {
-            await updateUser.ExecuteNonQueryAsync();
+            await updateUser.ExecuteNonQueryAsync(token);
             if (profile.Tags.Count == 0)
             {
                 await using var deleteAllUserTags =
                     new NpgsqlCommand($"DELETE FROM user_tags WHERE user_id = @userId", conn, transaction);
                 deleteAllUserTags.Parameters.AddWithValue("@userId", profile.Id);
-                await deleteAllUserTags.ExecuteNonQueryAsync();
+                await deleteAllUserTags.ExecuteNonQueryAsync(token);
             }
             else
             {
@@ -87,23 +87,23 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
                 insertUserTags.Parameters.AddWithValue("@user_id", profile.Id);
                 insertUserTags.Parameters.AddWithValue("@tags", profile.Tags.ToArray());
 
-                await upsertTags.ExecuteNonQueryAsync();
-                await deleteUserTags.ExecuteNonQueryAsync();
-                await insertUserTags.ExecuteNonQueryAsync();
+                await upsertTags.ExecuteNonQueryAsync(token);
+                await deleteUserTags.ExecuteNonQueryAsync(token);
+                await insertUserTags.ExecuteNonQueryAsync(token);
             }
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(token);
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }
 
-    public async Task<bool> IsProfileComplete(int userId)
+    public async Task<bool> IsProfileComplete(int userId, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var command = new NpgsqlCommand("SELECT EXISTS (" +
                                                     "SELECT 1 FROM users u " +
                                                     "WHERE u.id = @userId " +
@@ -114,7 +114,7 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
                                                     "AND EXISTS( " +
                                                     "SELECT 1 FROM user_pictures p WHERE p.user_id = u.id))", conn);
         command.Parameters.AddWithValue("@userId", userId);
-        bool? res = (bool?)await command.ExecuteScalarAsync();
+        bool? res = (bool?)await command.ExecuteScalarAsync(token);
         return res ?? false;
     }
 }

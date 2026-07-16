@@ -11,7 +11,7 @@ public class GetUserProfileQueryHandler(IUserProfileRepository userProfileReposi
 {
 	public async Task<UserProfileDto?> Handle(GetUserProfileQuery query, CancellationToken cancellationToken)
 	{
-		var userProfile = await userProfileRepository.GetUserProfile(query.Id) ?? throw new UserNotFoundException(query.Id.ToString());
+		var userProfile = await userProfileRepository.GetUserProfile(query.Id, cancellationToken) ?? throw new UserNotFoundException(query.Id.ToString());
 		return new UserProfileDto
 		{
 			Id = userProfile.Id,

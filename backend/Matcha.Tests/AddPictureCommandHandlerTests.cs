@@ -29,7 +29,7 @@ public class AddPictureCommandHandlerTests
 			handler.Handle(ValidCommand(byteLength: 0), CancellationToken.None));
 
 		await storage.DidNotReceiveWithAnyArgs().Save(default!, default!, default!, default);
-		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!);
+		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!, default);
 	}
 
 	[Fact]
@@ -43,7 +43,7 @@ public class AddPictureCommandHandlerTests
 			handler.Handle(ValidCommand(byteLength: 5 * 1024 * 1024 + 1), CancellationToken.None));
 
 		await storage.DidNotReceiveWithAnyArgs().Save(default!, default!, default!, default);
-		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!);
+		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!, default);
 	}
 
 	[Fact]
@@ -58,7 +58,7 @@ public class AddPictureCommandHandlerTests
 			handler.Handle(command, CancellationToken.None));
 
 		await storage.DidNotReceiveWithAnyArgs().Save(default!, default!, default!, default);
-		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!);
+		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!, default);
 	}
 
 	[Fact]
@@ -73,7 +73,7 @@ public class AddPictureCommandHandlerTests
 			handler.Handle(command, CancellationToken.None));
 
 		await storage.DidNotReceiveWithAnyArgs().Save(default!, default!, default!, default);
-		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!);
+		await repository.DidNotReceiveWithAnyArgs().AddPicture(default, default!, default);
 	}
 
 	[Fact]
@@ -86,14 +86,14 @@ public class AddPictureCommandHandlerTests
 
 		storage.Save(command.Stream, command.Filename, command.ContentType, CancellationToken.None)
 			.Returns(Task.FromResult("/uploads/profile.png"));
-		repository.AddPicture(command.UserId, "/uploads/profile.png")
+		repository.AddPicture(command.UserId, "/uploads/profile.png", CancellationToken.None)
 			.Returns(Task.FromResult(42));
 
 		int result = await handler.Handle(command, CancellationToken.None);
 
 		Assert.Equal(42, result);
 		await storage.Received(1).Save(command.Stream, command.Filename, command.ContentType, CancellationToken.None);
-		await repository.Received(1).AddPicture(command.UserId, "/uploads/profile.png");
+		await repository.Received(1).AddPicture(command.UserId, "/uploads/profile.png", CancellationToken.None);
 	}
 
 	[Fact]
@@ -106,7 +106,7 @@ public class AddPictureCommandHandlerTests
 
 		storage.Save(command.Stream, command.Filename, command.ContentType, CancellationToken.None)
 			.Returns(Task.FromResult("/uploads/profile.png"));
-		repository.AddPicture(command.UserId, "/uploads/profile.png")
+		repository.AddPicture(command.UserId, "/uploads/profile.png", CancellationToken.None)
 			.Returns<Task<int>>(_ => throw new PictureLimitExceededException());
 		storage.Delete("/uploads/profile.png", CancellationToken.None)
 			.Returns(Task.CompletedTask);

@@ -16,7 +16,7 @@ public class LoginCommandHandler(IUserAccountRepository userAccountRepository, I
 	public async Task<AuthResponseDto> Handle(LoginCommand request, CancellationToken cancellationToken)
 	{
 		double tokenExpiryDays = double.Parse(configuration["Jwt:RefreshTokenExpiryDays"]!);
-		var user = await userAccountRepository.GetByUsername(request.Username)
+		var user = await userAccountRepository.GetByUsername(request.Username, cancellationToken)
 			?? throw new UserNotFoundException(request.Username);
 
 		if (!passwordHasher.VerifyPassword(request.Password, user.Password))
@@ -24,7 +24,7 @@ public class LoginCommandHandler(IUserAccountRepository userAccountRepository, I
 
 		string token = tokenService.GenerateToken(user);
 		string refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-		await authRepository.SaveRefreshToken(user.Id, refreshToken, DateTime.UtcNow.AddDays(tokenExpiryDays));
+		await authRepository.SaveRefreshToken(user.Id, refreshToken, DateTime.UtcNow.AddDays(tokenExpiryDays), cancellationToken);
 		return new AuthResponseDto(token, refreshToken);
 	}
 }

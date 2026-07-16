@@ -27,7 +27,7 @@ public class CreateUserCommandHandler (IUserAccountRepository userAccountReposit
             Password = hashedPassword
         };
 
-        int id = await userAccountRepository.Create(user);
+        int id = await userAccountRepository.Create(user, cancellationToken);
         return id;
     }
 }
