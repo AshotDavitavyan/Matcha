@@ -8,18 +8,18 @@ namespace Infrastructure.Repositories;
 
 public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRepository
 {
-    public async Task<List<Picture>> GetPicturesByUserId(int userId)
+    public async Task<List<Picture>> GetPicturesByUserId(int userId, CancellationToken token)
     {
         List<Picture> pictures = new List<Picture>();
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
             "SELECT * FROM user_pictures WHERE user_id = @userId",
             conn);
         sql.Parameters.AddWithValue("@userId", userId);
 
-        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync(token);
+        while (await reader.ReadAsync(token))
         {
             pictures.Add(new Picture
             {
@@ -32,15 +32,15 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
         return pictures;
     }
 
-    public async Task<int> AddPicture(int userId, string url)
+    public async Task<int> AddPicture(int userId, string url, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var getPictures = new NpgsqlCommand(
             "SELECT COUNT(*) FROM user_pictures WHERE user_id = @userId",
             conn);
         getPictures.Parameters.AddWithValue("@userId", userId);
-        long count = (long)await getPictures.ExecuteScalarAsync();
+        long count = (long)await getPictures.ExecuteScalarAsync(token);
         if (count >= 5)
         {
             throw new PictureLimitExceededException();
@@ -53,15 +53,15 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
         insertPictures.Parameters.AddWithValue("@userId", userId);
         insertPictures.Parameters.AddWithValue("@url", url);
         insertPictures.Parameters.AddWithValue("@isPfp", count == 0);
-        int res = (int)(await insertPictures.ExecuteScalarAsync())!;
+        int res = (int)(await insertPictures.ExecuteScalarAsync(token))!;
         return res;
     }
 
-    public async Task<string> RemovePicture(int userId, int pictureId)
+    public async Task<string> RemovePicture(int userId, int pictureId, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
-        await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
+        await conn.OpenAsync(token);
+        await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync(token);
         await using var deletePicture =
             new NpgsqlCommand(
                 "DELETE FROM user_pictures " +
@@ -80,8 +80,8 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
         updatePfp.Parameters.AddWithValue("@userId", userId);
         try
         {
-            await using NpgsqlDataReader reader = await deletePicture.ExecuteReaderAsync();
-            if (!await reader.ReadAsync())
+            await using NpgsqlDataReader reader = await deletePicture.ExecuteReaderAsync(token);
+            if (!await reader.ReadAsync(token))
             {
                 throw new PictureNotFoundException();
             }
@@ -90,23 +90,23 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
             await reader.CloseAsync();
             if (isPfp)
             {
-                await updatePfp.ExecuteNonQueryAsync();
+                await updatePfp.ExecuteNonQueryAsync(token);
             }
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(token);
             return url;
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }
 
-    public async Task SetProfilePicture(int userId, int pictureId)
+    public async Task SetProfilePicture(int userId, int pictureId, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
-        await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
+        await conn.OpenAsync(token);
+        await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync(token);
         await using var unsetPfp = new NpgsqlCommand(
             "UPDATE user_pictures SET is_pfp = false WHERE user_id = @userId AND is_pfp = true",
             conn,
@@ -121,16 +121,16 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
 
         try
         {
-            await unsetPfp.ExecuteNonQueryAsync();
-            if (await setPfp.ExecuteNonQueryAsync() == 0)
+            await unsetPfp.ExecuteNonQueryAsync(token);
+            if (await setPfp.ExecuteNonQueryAsync(token) == 0)
             {
                 throw new PictureNotFoundException();
             }
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(token);
         }
         catch
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }

@@ -15,12 +15,12 @@ public class LikeUserCommandHandler(ILikeRepository likeRepository, IUserAccount
 			throw new SelfLikeException();
 		}
 
-		if (await userAccountRepository.GetById(request.LikedId) == null)
+		if (await userAccountRepository.GetById(request.LikedId, cancellationToken) == null)
 		{
 			throw new UserNotFoundException(request.LikedId.ToString());
 		}
 
-		await likeRepository.LikeUser(request.LikerId, request.LikedId);
-		return await likeRepository.HasUserLiked(request.LikedId, request.LikerId);
+		await likeRepository.LikeUser(request.LikerId, request.LikedId, cancellationToken);
+		return await likeRepository.HasUserLiked(request.LikedId, request.LikerId, cancellationToken);
 	}
 }

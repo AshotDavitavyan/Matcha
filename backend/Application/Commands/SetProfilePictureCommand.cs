@@ -10,6 +10,6 @@ public class SetProfilePictureCommandHandler(IUserPictureRepository userReposito
 {
 	public async Task Handle(SetProfilePictureCommand request, CancellationToken cancellationToken)
 	{
-		await userRepository.SetProfilePicture(request.UserId, request.PictureId);
+		await userRepository.SetProfilePicture(request.UserId, request.PictureId, cancellationToken);
 	}
 }

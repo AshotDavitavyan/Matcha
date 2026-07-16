@@ -4,7 +4,7 @@ namespace Domain.Repositories;
 
 public interface IUserProfileRepository
 {
-	Task<UserProfile?> GetUserProfile(int id);
-	Task UpdateProfile(UserProfile profile);
-	Task<bool> IsProfileComplete(int userId);
+	Task<UserProfile?> GetUserProfile(int id,  CancellationToken token);
+	Task UpdateProfile(UserProfile profile,  CancellationToken token);
+	Task<bool> IsProfileComplete(int userId, CancellationToken token);
 }

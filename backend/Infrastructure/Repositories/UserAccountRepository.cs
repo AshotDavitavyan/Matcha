@@ -7,10 +7,10 @@ namespace Infrastructure.Repositories;
 
 public class UserAccountRepository(DbConnectionFactory factory) : IUserAccountRepository
 {
-    public async Task<int> Create(User user)
+    public async Task<int> Create(User user, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
             "INSERT INTO users (Username, FirstName, LastName, Email, Password) " +
             "VALUES (@Username, @FirstName, @LastName, @Email, @Password) " +
@@ -21,18 +21,18 @@ public class UserAccountRepository(DbConnectionFactory factory) : IUserAccountRe
         sql.Parameters.AddWithValue("@LastName", user.LastName);
         sql.Parameters.AddWithValue("@Email", user.Email);
         sql.Parameters.AddWithValue("@Password", user.Password);
-        return (int)await sql.ExecuteScalarAsync();
+        return (int)await sql.ExecuteScalarAsync(token);
     }
 
-    public async Task<IList<User>> GetAll()
+    public async Task<IList<User>> GetAll(CancellationToken token)
     {
         List<User> users = new List<User>();
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email FROM users;", conn);
-        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync(token);
+        while (await reader.ReadAsync(token))
         {
             users.Add(new User
             {
@@ -46,15 +46,15 @@ public class UserAccountRepository(DbConnectionFactory factory) : IUserAccountRe
         return users;
     }
 
-    public async Task<User?> GetById(int id)
+    public async Task<User?> GetById(int id, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email, password FROM users WHERE Id = @Id;", conn);
         sql.Parameters.AddWithValue("@Id", id);
-        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
+        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync(token);
+        if (await reader.ReadAsync(token))
         {
             return new User
             {
@@ -69,26 +69,26 @@ public class UserAccountRepository(DbConnectionFactory factory) : IUserAccountRe
         return null;
     }
 
-    public async Task UpdatePassword(int requestId, string hashedNew)
+    public async Task UpdatePassword(int requestId, string hashedNew, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
             "UPDATE users SET Password = @Password WHERE Id = @Id;", conn);
         sql.Parameters.AddWithValue("@Password", hashedNew);
         sql.Parameters.AddWithValue("@Id", requestId);
-        await sql.ExecuteNonQueryAsync();
+        await sql.ExecuteNonQueryAsync(token);
     }
 
-    public async Task<User?> GetByUsername(string username)
+    public async Task<User?> GetByUsername(string username, CancellationToken token)
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
-        await conn.OpenAsync();
+        await conn.OpenAsync(token);
         await using var sql = new NpgsqlCommand(
             "SELECT id, username, firstname, lastname, email, password FROM users WHERE username = @username;", conn);
         sql.Parameters.AddWithValue("@username", username);
-        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
+        await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync(token);
+        if (await reader.ReadAsync(token))
         {
             return new User
             {

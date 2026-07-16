@@ -14,10 +14,10 @@ public class UnlikeUserCommandHandler(ILikeRepository likeRepository, IUserAccou
 		{
 			throw new SelfLikeException();
 		}
-		if (await accountRepository.GetById(request.LikedId) == null)
+		if (await accountRepository.GetById(request.LikedId, cancellationToken) == null)
 		{
 			throw new UserNotFoundException(request.LikedId.ToString());
 		}
-		await likeRepository.UnlikeUser(request.LikerId, request.LikedId);
+		await likeRepository.UnlikeUser(request.LikerId, request.LikedId, cancellationToken);
 	}
 }

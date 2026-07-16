@@ -11,7 +11,7 @@ public class GetUserByIdQueryHandler(IUserAccountRepository userAccountRepositor
 {
 	public async Task<UserDto> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
 	{
-		var user = await userAccountRepository.GetById(query.id) ?? throw new UserNotFoundException(query.id.ToString());
+		var user = await userAccountRepository.GetById(query.id, cancellationToken) ?? throw new UserNotFoundException(query.id.ToString());
 		return new UserDto
 		{
 			Id = user.Id,

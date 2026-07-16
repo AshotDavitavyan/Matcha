@@ -23,6 +23,6 @@ public class UpdateProfileCommandHandler(IUserProfileRepository userProfileRepos
             SexualPreference = command.UserProfileDto.SexualPreference,
             Tags = command.UserProfileDto.Tags
         };
-        await userProfileRepository.UpdateProfile(profile);
+        await userProfileRepository.UpdateProfile(profile, cancellationToken);
     }
 }
