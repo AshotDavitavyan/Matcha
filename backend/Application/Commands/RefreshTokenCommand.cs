@@ -17,7 +17,7 @@ public class RefreshTokenCommandHandler(IAuthRepository authRepository, ITokenSe
 	{
 		double tokenExpiryDays = double.Parse(configuration["Jwt:RefreshTokenExpiryDays"]!);
 		
-		User? user = await authRepository.GetByRefreshToken(request.RefreshToken);
+		User? user = await authRepository.GetByRefreshToken(request.RefreshToken, cancellationToken);
 		if (user is null)
 		{
 			throw new InvalidRefreshTokenException();
@@ -30,7 +30,7 @@ public class RefreshTokenCommandHandler(IAuthRepository authRepository, ITokenSe
 
 		string token = tokenService.GenerateToken(user);
 		string refreshToken =  Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-		await authRepository.SaveRefreshToken(user.Id, refreshToken, DateTime.UtcNow.AddDays(tokenExpiryDays));
+		await authRepository.SaveRefreshToken(user.Id, refreshToken, DateTime.UtcNow.AddDays(tokenExpiryDays), cancellationToken);
 		return new AuthResponseDto(token, refreshToken);
 	}
 }

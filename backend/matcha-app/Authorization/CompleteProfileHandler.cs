@@ -13,7 +13,8 @@ public class CompleteProfileHandler(IUserProfileRepository userProfileRepository
 		{
 			return;
 		}
-		bool isProfileComplete = await userProfileRepository.IsProfileComplete(userId);
+		var token = context.Resource is HttpContext httpContext ? httpContext.RequestAborted : CancellationToken.None;
+		bool isProfileComplete = await userProfileRepository.IsProfileComplete(userId, token);
 		if (isProfileComplete)
 		{
 			context.Succeed(requirement);

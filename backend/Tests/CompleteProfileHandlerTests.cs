@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Domain.Repositories;
 using matcha_app.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using Xunit;
 
@@ -30,7 +31,7 @@ public class CompleteProfileHandlerTests
 		await handler.HandleAsync(context);
 
 		Assert.False(context.HasSucceeded);
-		await repository.DidNotReceiveWithAnyArgs().IsProfileComplete(default);
+		await repository.DidNotReceiveWithAnyArgs().IsProfileComplete(default, default);
 	}
 
 	[Fact]
@@ -44,7 +45,7 @@ public class CompleteProfileHandlerTests
 		await handler.HandleAsync(context);
 
 		Assert.False(context.HasSucceeded);
-		await repository.DidNotReceiveWithAnyArgs().IsProfileComplete(default);
+		await repository.DidNotReceiveWithAnyArgs().IsProfileComplete(default, default);
 	}
 
 	[Fact]
@@ -55,12 +56,12 @@ public class CompleteProfileHandlerTests
 		var context = CreateContext(UserWithClaim("sub", "7"), requirement);
 		var handler = new CompleteProfileHandler(repository);
 
-		repository.IsProfileComplete(7).Returns(Task.FromResult(false));
+		repository.IsProfileComplete(7, Arg.Any<CancellationToken>()).Returns(Task.FromResult(false));
 
 		await handler.HandleAsync(context);
 
 		Assert.False(context.HasSucceeded);
-		await repository.Received(1).IsProfileComplete(7);
+		await repository.Received(1).IsProfileComplete(7, Arg.Any<CancellationToken>());
 	}
 
 	[Fact]
@@ -71,12 +72,12 @@ public class CompleteProfileHandlerTests
 		var context = CreateContext(UserWithClaim("sub", "7"), requirement);
 		var handler = new CompleteProfileHandler(repository);
 
-		repository.IsProfileComplete(7).Returns(Task.FromResult(true));
+		repository.IsProfileComplete(7, Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
 
 		await handler.HandleAsync(context);
 
 		Assert.True(context.HasSucceeded);
-		await repository.Received(1).IsProfileComplete(7);
+		await repository.Received(1).IsProfileComplete(7, Arg.Any<CancellationToken>());
 	}
 
 	[Fact]
@@ -87,11 +88,30 @@ public class CompleteProfileHandlerTests
 		var context = CreateContext(UserWithClaim(ClaimTypes.NameIdentifier, "9"), requirement);
 		var handler = new CompleteProfileHandler(repository);
 
-		repository.IsProfileComplete(9).Returns(Task.FromResult(true));
+		repository.IsProfileComplete(9, Arg.Any<CancellationToken>()).Returns(Task.FromResult(true));
 
 		await handler.HandleAsync(context);
 
 		Assert.True(context.HasSucceeded);
-		await repository.Received(1).IsProfileComplete(9);
+		await repository.Received(1).IsProfileComplete(9, Arg.Any<CancellationToken>());
+	}
+
+	[Fact]
+	public async Task HandleAsync_HttpContextResource_ForwardsRequestAbortedToken()
+	{
+		var repository = Substitute.For<IUserProfileRepository>();
+		var requirement = new CompleteProfileRequirement();
+		var httpContext = new DefaultHttpContext();
+		using var cancellationTokenSource = new CancellationTokenSource();
+		httpContext.RequestAborted = cancellationTokenSource.Token;
+		var context = new AuthorizationHandlerContext([requirement], UserWithClaim("sub", "7"), httpContext);
+		var handler = new CompleteProfileHandler(repository);
+
+		repository.IsProfileComplete(7, cancellationTokenSource.Token).Returns(Task.FromResult(true));
+
+		await handler.HandleAsync(context);
+
+		Assert.True(context.HasSucceeded);
+		await repository.Received(1).IsProfileComplete(7, cancellationTokenSource.Token);
 	}
 }

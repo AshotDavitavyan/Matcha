@@ -26,7 +26,7 @@ public class RefreshTokenCommandHandlerTests
 			RefreshTokenExpiry = DateTime.UtcNow.AddDays(7)
 		};
 
-		userRepository.GetByRefreshToken("valid-token").Returns(user);
+		userRepository.GetByRefreshToken("valid-token", CancellationToken.None).Returns(user);
 		tokenService.GenerateToken(Arg.Any<User>()).Returns("new-access-token");
 		configuration["Jwt:RefreshTokenExpiryDays"].Returns("7");
 		
@@ -45,7 +45,7 @@ public class RefreshTokenCommandHandlerTests
 		var tokenService = Substitute.For<ITokenService>();
 		var configuration = Substitute.For<IConfiguration>();
 		
-		userRepository.GetByRefreshToken("invalid-token").Returns((User?)null);               
+		userRepository.GetByRefreshToken("invalid-token", CancellationToken.None).Returns((User?)null);
 		configuration["Jwt:RefreshTokenExpiryDays"].Returns("7");
 		var handler = new RefreshTokenCommandHandler(userRepository, tokenService, configuration);
 		await Assert.ThrowsAsync<InvalidRefreshTokenException>(() => handler.Handle(new RefreshTokenCommand("invalid-token"), CancellationToken.None));
@@ -67,7 +67,7 @@ public class RefreshTokenCommandHandlerTests
 			RefreshTokenExpiry = DateTime.UtcNow.AddDays(-1)
 		};
 		
-		userRepository.GetByRefreshToken("expired-token").Returns(user);
+		userRepository.GetByRefreshToken("expired-token", CancellationToken.None).Returns(user);
 		configuration["Jwt:RefreshTokenExpiryDays"].Returns("7");
 		
 		var handler = new RefreshTokenCommandHandler(userRepository, tokenService, configuration);

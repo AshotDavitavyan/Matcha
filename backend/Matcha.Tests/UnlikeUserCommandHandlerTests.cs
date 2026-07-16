@@ -19,7 +19,7 @@ public class UnlikeUserCommandHandlerTests
 		await Assert.ThrowsAsync<SelfLikeException>(() =>
 			handler.Handle(command, CancellationToken.None));
 
-		await likeRepository.DidNotReceiveWithAnyArgs().UnlikeUser(default, default);
+		await likeRepository.DidNotReceiveWithAnyArgs().UnlikeUser(default, default, default);
 	}
 
 	[Fact]
@@ -30,13 +30,13 @@ public class UnlikeUserCommandHandlerTests
 		var handler = new UnlikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new UnlikeUserCommand(1, 2);
 
-		accountRepository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId, CancellationToken.None)
 			.Returns(Task.FromResult<User?>(null));
 
 		await Assert.ThrowsAsync<UserNotFoundException>(() =>
 			handler.Handle(command, CancellationToken.None));
 
-		await likeRepository.DidNotReceiveWithAnyArgs().UnlikeUser(default, default);
+		await likeRepository.DidNotReceiveWithAnyArgs().UnlikeUser(default, default, default);
 	}
 
 	[Fact]
@@ -47,12 +47,12 @@ public class UnlikeUserCommandHandlerTests
 		var handler = new UnlikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new UnlikeUserCommand(1, 2);
 
-		accountRepository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId, CancellationToken.None)
 			.Returns(Task.FromResult<User?>(CreateUser(command.LikedId)));
 
 		await handler.Handle(command, CancellationToken.None);
 
-		await likeRepository.Received(1).UnlikeUser(command.LikerId, command.LikedId);
+		await likeRepository.Received(1).UnlikeUser(command.LikerId, command.LikedId, CancellationToken.None);
 	}
 
 	private static User CreateUser(int id)

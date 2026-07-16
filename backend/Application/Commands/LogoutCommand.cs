@@ -9,6 +9,6 @@ public class LogoutCommandHandler(IAuthRepository userRepository) : IRequestHand
 {
 	public async Task Handle(LogoutCommand request, CancellationToken cancellationToken)
 	{
-		await userRepository.ClearRefreshToken(request.UserId);
+		await userRepository.ClearRefreshToken(request.UserId, cancellationToken);
 	}
 }

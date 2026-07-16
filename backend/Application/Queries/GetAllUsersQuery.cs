@@ -9,7 +9,7 @@ public class GetAllUsersCommandHandler (IUserAccountRepository userAccountReposi
 {
 	public async Task<IList<UserSummaryDto>> Handle(GetAllUsersQuery query, CancellationToken cancellationToken)
 	{
-		var users = await userAccountRepository.GetAll();
+		var users = await userAccountRepository.GetAll(cancellationToken);
 		return users.Select(u => new UserSummaryDto
 		{
 			Id = u.Id,

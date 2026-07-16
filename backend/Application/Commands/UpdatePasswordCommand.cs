@@ -14,13 +14,13 @@ public class UpdatePasswordCommandHandler(IUserAccountRepository userAccountRepo
 	public async Task Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
 	{
 		string hashedNew = hasher.HashPassword(request.Dto.NewPassword);
-		User? user = await userAccountRepository.GetById(request.Id);
+		User? user = await userAccountRepository.GetById(request.Id, cancellationToken);
 		if (user == null)
 			throw new UserNotFoundException(request.Id.ToString());
 		if (!hasher.VerifyPassword(request.Dto.CurrentPassword, user.Password))
 			throw new InvalidPasswordException();
 		if (hasher.VerifyPassword(request.Dto.NewPassword, user.Password))
 			throw new SamePasswordException();
-		await userAccountRepository.UpdatePassword(request.Id, hashedNew);
+		await userAccountRepository.UpdatePassword(request.Id, hashedNew, cancellationToken);
 	}
 }

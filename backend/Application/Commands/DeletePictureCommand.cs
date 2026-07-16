@@ -10,7 +10,7 @@ public class DeletePictureCommandHandler(IUserPictureRepository userRepository, 
 {
 	public async Task Handle(DeletePictureCommand request, CancellationToken cancellationToken)
 	{
-		string url = await userRepository.RemovePicture(request.UserId, request.PictureId);
+		string url = await userRepository.RemovePicture(request.UserId, request.PictureId, cancellationToken);
 		await storage.Delete(url, cancellationToken);
 	}
 }

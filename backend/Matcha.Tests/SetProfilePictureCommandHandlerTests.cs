@@ -16,7 +16,7 @@ public class SetProfilePictureCommandHandlerTests
 
 		await handler.Handle(command, CancellationToken.None);
 
-		await repository.Received(1).SetProfilePicture(command.UserId, command.PictureId);
+		await repository.Received(1).SetProfilePicture(command.UserId, command.PictureId, CancellationToken.None);
 	}
 
 	[Fact]
@@ -26,7 +26,7 @@ public class SetProfilePictureCommandHandlerTests
 		var handler = new SetProfilePictureCommandHandler(repository);
 		var command = new SetProfilePictureCommand(1, 10);
 
-		repository.SetProfilePicture(command.UserId, command.PictureId)
+		repository.SetProfilePicture(command.UserId, command.PictureId, CancellationToken.None)
 			.Returns<Task>(_ => throw new PictureNotFoundException());
 
 		await Assert.ThrowsAsync<PictureNotFoundException>(() =>

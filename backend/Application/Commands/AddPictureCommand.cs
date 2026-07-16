@@ -38,7 +38,7 @@ public class AddPictureCommandHandler(IPictureStorage storage, IUserPictureRepos
 		string url = await storage.Save(request.Stream, request.Filename, request.ContentType, cancellationToken);
 		try
 		{
-			int id = await userRepository.AddPicture(request.UserId, url);
+			int id = await userRepository.AddPicture(request.UserId, url, cancellationToken);
 			return id;
 		}
 		catch (Exception ex) when (!(ex is OperationCanceledException))

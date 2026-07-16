@@ -19,8 +19,8 @@ public class LikeUserCommandHandlerTests
 		await Assert.ThrowsAsync<SelfLikeException>(() =>
 			handler.Handle(command, CancellationToken.None));
 
-		await repository.DidNotReceiveWithAnyArgs().LikeUser(default, default);
-		await repository.DidNotReceiveWithAnyArgs().HasUserLiked(default, default);
+		await repository.DidNotReceiveWithAnyArgs().LikeUser(default, default, default);
+		await repository.DidNotReceiveWithAnyArgs().HasUserLiked(default, default, default);
 	}
 
 	[Fact]
@@ -31,14 +31,14 @@ public class LikeUserCommandHandlerTests
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
-		accountRepository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId, CancellationToken.None)
 			.Returns(Task.FromResult<User?>(null));
 
 		await Assert.ThrowsAsync<UserNotFoundException>(() =>
 			handler.Handle(command, CancellationToken.None));
 
-		await likeRepository.DidNotReceiveWithAnyArgs().LikeUser(default, default);
-		await likeRepository.DidNotReceiveWithAnyArgs().HasUserLiked(default, default);
+		await likeRepository.DidNotReceiveWithAnyArgs().LikeUser(default, default, default);
+		await likeRepository.DidNotReceiveWithAnyArgs().HasUserLiked(default, default, default);
 	}
 
 	[Fact]
@@ -49,16 +49,16 @@ public class LikeUserCommandHandlerTests
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
-		accountRepository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId, CancellationToken.None)
 			.Returns(Task.FromResult<User?>(CreateUser(command.LikedId)));
-		likeRepository.HasUserLiked(command.LikedId, command.LikerId)
+		likeRepository.HasUserLiked(command.LikedId, command.LikerId, CancellationToken.None)
 			.Returns(Task.FromResult(false));
 
 		bool matched = await handler.Handle(command, CancellationToken.None);
 
 		Assert.False(matched);
-		await likeRepository.Received(1).LikeUser(command.LikerId, command.LikedId);
-		await likeRepository.Received(1).HasUserLiked(command.LikedId, command.LikerId);
+		await likeRepository.Received(1).LikeUser(command.LikerId, command.LikedId, CancellationToken.None);
+		await likeRepository.Received(1).HasUserLiked(command.LikedId, command.LikerId, CancellationToken.None);
 	}
 
 	[Fact]
@@ -69,16 +69,16 @@ public class LikeUserCommandHandlerTests
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
-		accountRepository.GetById(command.LikedId)
+		accountRepository.GetById(command.LikedId, CancellationToken.None)
 			.Returns(Task.FromResult<User?>(CreateUser(command.LikedId)));
-		likeRepository.HasUserLiked(command.LikedId, command.LikerId)
+		likeRepository.HasUserLiked(command.LikedId, command.LikerId, CancellationToken.None)
 			.Returns(Task.FromResult(true));
 
 		bool matched = await handler.Handle(command, CancellationToken.None);
 
 		Assert.True(matched);
-		await likeRepository.Received(1).LikeUser(command.LikerId, command.LikedId);
-		await likeRepository.Received(1).HasUserLiked(command.LikedId, command.LikerId);
+		await likeRepository.Received(1).LikeUser(command.LikerId, command.LikedId, CancellationToken.None);
+		await likeRepository.Received(1).HasUserLiked(command.LikedId, command.LikerId, CancellationToken.None);
 	}
 
 	private static User CreateUser(int id)
