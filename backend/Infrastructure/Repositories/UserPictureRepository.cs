@@ -8,12 +8,14 @@ namespace Infrastructure.Repositories;
 
 public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRepository
 {
-	    public async Task<List<Picture>> GetPicturesByUserId(int userId)
+    public async Task<List<Picture>> GetPicturesByUserId(int userId)
     {
         List<Picture> pictures = new List<Picture>();
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using var sql = new NpgsqlCommand($"SELECT * FROM user_pictures WHERE user_id = @userId", conn);
+        await using var sql = new NpgsqlCommand(
+            "SELECT * FROM user_pictures WHERE user_id = @userId",
+            conn);
         sql.Parameters.AddWithValue("@userId", userId);
 
         await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
@@ -34,14 +36,20 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using var getPictures = new NpgsqlCommand("SELECT COUNT(*) FROM user_pictures WHERE user_id = @userId", conn);
+        await using var getPictures = new NpgsqlCommand(
+            "SELECT COUNT(*) FROM user_pictures WHERE user_id = @userId",
+            conn);
         getPictures.Parameters.AddWithValue("@userId", userId);
         long count = (long)await getPictures.ExecuteScalarAsync();
         if (count >= 5)
         {
             throw new PictureLimitExceededException();
         }
-        await using var insertPictures = new NpgsqlCommand("INSERT INTO user_pictures (user_id, url, is_pfp) VALUES (@userId, @url, @isPfp) RETURNING id", conn);
+        await using var insertPictures = new NpgsqlCommand(
+            "INSERT INTO user_pictures (user_id, url, is_pfp) " +
+            "VALUES (@userId, @url, @isPfp) " +
+            "RETURNING id",
+            conn);
         insertPictures.Parameters.AddWithValue("@userId", userId);
         insertPictures.Parameters.AddWithValue("@url", url);
         insertPictures.Parameters.AddWithValue("@isPfp", count == 0);
@@ -55,10 +63,20 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
         await conn.OpenAsync();
         await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
         await using var deletePicture =
-            new NpgsqlCommand("DELETE FROM user_pictures WHERE user_id = @userId AND id = @id RETURNING url, is_pfp", conn, transaction);
+            new NpgsqlCommand(
+                "DELETE FROM user_pictures " +
+                "WHERE user_id = @userId AND id = @id " +
+                "RETURNING url, is_pfp",
+                conn,
+                transaction);
         deletePicture.Parameters.AddWithValue("@userId", userId);
         deletePicture.Parameters.AddWithValue("@id", pictureId);
-        await using var updatePfp = new NpgsqlCommand("UPDATE user_pictures SET is_pfp = true WHERE id = (SELECT id FROM user_pictures WHERE user_id = @userId ORDER BY id LIMIT 1)", conn, transaction);
+        await using var updatePfp = new NpgsqlCommand(
+            "UPDATE user_pictures SET is_pfp = true " +
+            "WHERE id = (" +
+            "SELECT id FROM user_pictures WHERE user_id = @userId ORDER BY id LIMIT 1)",
+            conn,
+            transaction);
         updatePfp.Parameters.AddWithValue("@userId", userId);
         try
         {
@@ -68,7 +86,7 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
                 throw new PictureNotFoundException();
             }
             string url = reader.GetString(0);
-            bool isPfp = (bool)reader.GetBoolean(1);
+            bool isPfp = reader.GetBoolean(1);
             await reader.CloseAsync();
             if (isPfp)
             {
@@ -90,9 +108,14 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
         await conn.OpenAsync();
         await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
         await using var unsetPfp = new NpgsqlCommand(
-            "UPDATE user_pictures SET is_pfp = false WHERE user_id = @userId AND is_pfp = true", conn, transaction);
+            "UPDATE user_pictures SET is_pfp = false WHERE user_id = @userId AND is_pfp = true",
+            conn,
+            transaction);
         unsetPfp.Parameters.AddWithValue("@userId", userId);
-        await using var setPfp = new NpgsqlCommand("UPDATE user_pictures SET is_pfp = true WHERE user_id = @userId AND id = @pictureId", conn, transaction);
+        await using var setPfp = new NpgsqlCommand(
+            "UPDATE user_pictures SET is_pfp = true WHERE user_id = @userId AND id = @pictureId",
+            conn,
+            transaction);
         setPfp.Parameters.AddWithValue("@pictureId", pictureId);
         setPfp.Parameters.AddWithValue("@userId", userId);
 
@@ -111,5 +134,4 @@ public class UserPictureRepository(DbConnectionFactory factory) : IUserPictureRe
             throw;
         }
     }
-
 }

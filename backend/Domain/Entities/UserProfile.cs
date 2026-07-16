@@ -11,7 +11,7 @@ public class UserProfile
 	public string Email { get; set; }
 	public string? Biography { get; set; }
 	public Gender? Gender { get; set; }
-	public SexualPreference? SexualPreference  { get; set; }
+	public SexualPreference? SexualPreference { get; set; }
 	public List<string> Tags { get; set; } = new();
 	public List<Picture> Pictures { get; set; } = new();
 }

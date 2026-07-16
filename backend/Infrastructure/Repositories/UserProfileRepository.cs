@@ -8,23 +8,26 @@ namespace Infrastructure.Repositories;
 
 public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepository pictureRepository) : IUserProfileRepository
 {
-	public async Task<UserProfile?> GetUserProfile(int id)
-{
-    UserProfile? profile = null;
+    public async Task<UserProfile?> GetUserProfile(int id)
+    {
+        UserProfile? profile = null;
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using var sql = new NpgsqlCommand("SELECT u.id, u.username, u.firstname, u.lastname, u.email, u.biography, u.gender, u.sexual_preferences, array_agg(t.name) " +
-                                                "FILTER (WHERE t.name IS NOT NULL) " +
-                                                "FROM users u " +
-                                                "LEFT JOIN user_tags ut ON ut.user_id = u.id " +
-                                                "LEFT JOIN tags t ON t.id = ut.tag_id " +
-                                                "WHERE u.id = @id " +
-                                                "GROUP BY u.id;", conn);
+        await using var sql = new NpgsqlCommand(
+            "SELECT u.id, u.username, u.firstname, u.lastname, u.email, u.biography, " +
+            "u.gender, u.sexual_preferences, array_agg(t.name) " +
+            "FILTER (WHERE t.name IS NOT NULL) " +
+            "FROM users u " +
+            "LEFT JOIN user_tags ut ON ut.user_id = u.id " +
+            "LEFT JOIN tags t ON t.id = ut.tag_id " +
+            "WHERE u.id = @id " +
+            "GROUP BY u.id;",
+            conn);
         sql.Parameters.AddWithValue("@id", id);
         await using NpgsqlDataReader reader = await sql.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            profile =  new UserProfile
+            profile = new UserProfile
             {
                 Id = reader.GetInt32(0),
                 Username = reader.GetString(1),
@@ -48,30 +51,55 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
         await conn.OpenAsync();
         await using NpgsqlTransaction transaction = await conn.BeginTransactionAsync();
 
-        await using var updateUser = new NpgsqlCommand("UPDATE users SET firstname = @firstname, lastname = @lastname, email = @email, gender = @gender::gender_type, sexual_preferences = @sexual_preferences::sexual_preference_type, biography = @biography WHERE id = @id;", conn, transaction);
+        await using var updateUser = new NpgsqlCommand(
+            "UPDATE users " +
+            "SET firstname = @firstname, lastname = @lastname, email = @email, " +
+            "gender = @gender::gender_type, " +
+            "sexual_preferences = @sexual_preferences::sexual_preference_type, " +
+            "biography = @biography " +
+            "WHERE id = @id;",
+            conn,
+            transaction);
         updateUser.Parameters.AddWithValue("@firstname", profile.FirstName);
         updateUser.Parameters.AddWithValue("@lastname", profile.LastName);
         updateUser.Parameters.AddWithValue("@email", profile.Email);
-        updateUser.Parameters.AddWithValue("@gender", profile.Gender.HasValue ? profile.Gender.Value.ToString().ToLowerInvariant() : DBNull.Value);
-        updateUser.Parameters.AddWithValue("@sexual_preferences", profile.SexualPreference.HasValue ? profile.SexualPreference.Value.ToString().ToLowerInvariant() :  DBNull.Value);
+        updateUser.Parameters.AddWithValue(
+            "@gender",
+            profile.Gender.HasValue ? profile.Gender.Value.ToString().ToLowerInvariant() : DBNull.Value);
+        updateUser.Parameters.AddWithValue(
+            "@sexual_preferences",
+            profile.SexualPreference.HasValue
+                ? profile.SexualPreference.Value.ToString().ToLowerInvariant()
+                : DBNull.Value);
         updateUser.Parameters.AddWithValue("@biography", profile.Biography ?? (object)DBNull.Value);
         updateUser.Parameters.AddWithValue("@id", profile.Id);
 
         List<string> valueClauses = profile.Tags.Select((_, i) => $"(@name{i})").ToList();
-        await using var upsertTags = new NpgsqlCommand($"INSERT INTO tags (name) VALUES {string.Join(", ", valueClauses)} " +
-                                                                         $"ON CONFLICT (name) DO NOTHING", conn, transaction);
+        await using var upsertTags = new NpgsqlCommand(
+            $"INSERT INTO tags (name) VALUES {string.Join(", ", valueClauses)} " +
+            "ON CONFLICT (name) DO NOTHING",
+            conn,
+            transaction);
         for (int i = 0; i < valueClauses.Count; i++)
+        {
             upsertTags.Parameters.AddWithValue($"@name{i}", profile.Tags[i]);
+        }
 
-        await using var deleteUserTags = new NpgsqlCommand($"DELETE FROM user_tags " +
-                                                                             $"WHERE user_id = @userId " +
-                                                                             $"AND tag_id NOT IN (SELECT id FROM tags WHERE name = ANY (@names))", conn, transaction);
+        await using var deleteUserTags = new NpgsqlCommand(
+            "DELETE FROM user_tags " +
+            "WHERE user_id = @userId " +
+            "AND tag_id NOT IN (SELECT id FROM tags WHERE name = ANY (@names))",
+            conn,
+            transaction);
         deleteUserTags.Parameters.AddWithValue("@userId", profile.Id);
         deleteUserTags.Parameters.AddWithValue("@names", profile.Tags.ToArray());
 
         await using var insertUserTags = new NpgsqlCommand(
-            $"INSERT INTO user_tags (user_id, tag_id) " +
-                    $"SELECT @user_id, id FROM tags WHERE name = ANY(@tags) ON CONFLICT (user_id, tag_id) DO NOTHING", conn, transaction);
+            "INSERT INTO user_tags (user_id, tag_id) " +
+            "SELECT @user_id, id FROM tags WHERE name = ANY(@tags) " +
+            "ON CONFLICT (user_id, tag_id) DO NOTHING",
+            conn,
+            transaction);
         insertUserTags.Parameters.AddWithValue("@user_id", profile.Id);
         insertUserTags.Parameters.AddWithValue("@tags", profile.Tags.ToArray());
         try
@@ -93,15 +121,17 @@ public class UserProfileRepository(DbConnectionFactory factory, IUserPictureRepo
     {
         await using NpgsqlConnection conn = factory.CreateConnection();
         await conn.OpenAsync();
-        await using var command = new NpgsqlCommand("SELECT EXISTS (" +
-                                                    "SELECT 1 FROM users u " +
-                                                    "WHERE u.id = @userId " +
-                                                    "AND u.biography IS NOT NULL " +
-                                                    "AND btrim(u.biography) <> '' " +
-                                                    "AND u.gender IS NOT NULL " +
-                                                    "AND u.sexual_preferences IS NOT NULL " +
-                                                    "AND EXISTS( " +
-                                                    "SELECT 1 FROM user_pictures p WHERE p.user_id = u.id))", conn);
+        await using var command = new NpgsqlCommand(
+            "SELECT EXISTS (" +
+            "SELECT 1 FROM users u " +
+            "WHERE u.id = @userId " +
+            "AND u.biography IS NOT NULL " +
+            "AND btrim(u.biography) <> '' " +
+            "AND u.gender IS NOT NULL " +
+            "AND u.sexual_preferences IS NOT NULL " +
+            "AND EXISTS( " +
+            "SELECT 1 FROM user_pictures p WHERE p.user_id = u.id))",
+            conn);
         command.Parameters.AddWithValue("@userId", userId);
         bool? res = (bool?)await command.ExecuteScalarAsync();
         return res ?? false;

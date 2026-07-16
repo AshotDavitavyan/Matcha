@@ -1,5 +1,4 @@
 using Npgsql;
-using System.Data.SqlClient;
 
 namespace Infrastructure.Database;
 
