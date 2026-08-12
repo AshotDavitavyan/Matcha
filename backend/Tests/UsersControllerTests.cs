@@ -17,7 +17,6 @@ public class UsersControllerTests : IClassFixture<WebApplicationFactory<Program>
 	[Theory]
 	[InlineData("/users")]
 	[InlineData("/users/1")]
-	[InlineData("/users/1/profile")]
 	public async Task ProtectedGetEndpoints_WithoutToken_ReturnUnauthorized(string url)
 	{
 		var response = await _client.GetAsync(url);
@@ -26,9 +25,9 @@ public class UsersControllerTests : IClassFixture<WebApplicationFactory<Program>
 	}
 
 	[Fact]
-	public async Task UpdateProfile_WithoutToken_ReturnsUnauthorized()
+	public async Task UpdateUser_WithoutToken_ReturnsUnauthorized()
 	{
-		var response = await _client.PutAsJsonAsync("/users/1/profile", new
+		var response = await _client.PutAsJsonAsync("/users/1", new
 		{
 			firstName = "Test",
 			lastName = "User",

@@ -1,5 +1,5 @@
 using Application.Commands;
-using Domain.Entities;
+using Domain.Entities.Users;
 using Domain.Exceptions;
 using Domain.Repositories;
 using NSubstitute;
@@ -12,7 +12,7 @@ public class UnlikeUserCommandHandlerTests
 	public async Task Handle_SelfUnlike_Throws()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new UnlikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new UnlikeUserCommand(1, 1);
 
@@ -26,7 +26,7 @@ public class UnlikeUserCommandHandlerTests
 	public async Task Handle_LikedUserNotFound_Throws()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new UnlikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new UnlikeUserCommand(1, 2);
 
@@ -43,7 +43,7 @@ public class UnlikeUserCommandHandlerTests
 	public async Task Handle_ExistingLikedUser_CallsRepository()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new UnlikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new UnlikeUserCommand(1, 2);
 
@@ -61,7 +61,7 @@ public class UnlikeUserCommandHandlerTests
 		{
 			Id = id,
 			Username = $"user{id}",
-			Password = "password",
+			PasswordHash = "password",
 			Email = $"user{id}@example.com",
 			FirstName = "Test",
 			LastName = "User"

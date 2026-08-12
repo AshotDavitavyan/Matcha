@@ -11,7 +11,7 @@ namespace matcha_app.Controllers;
 [Authorize]
 [ApiController]
 [Route("[controller]")]
-public class UsersController (IMediator mediator) : ControllerBase
+public class UsersController(IMediator mediator) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost]
@@ -38,6 +38,19 @@ public class UsersController (IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetById([FromRoute] GetUserByIdQuery query)
     {
         return Ok(await mediator.Send(query));
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
+    {
+        string? userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int authenticatedUserId) || authenticatedUserId != id)
+        {
+            return Forbid();
+        }
+        var command = new UpdateUserCommand(id, dto);
+        await mediator.Send(command);
+        return NoContent();
     }
 
     [HttpPut("{id}/password")]

@@ -1,5 +1,5 @@
 using Application.Interfaces;
-using Domain.Entities;
+using Domain.Entities.Users;
 using Domain.Repositories;
 using MediatR;
 
@@ -13,7 +13,7 @@ public record CreateUserCommand(
     string Password
     ) : IRequest<int>;
 
-public class CreateUserCommandHandler (IUserAccountRepository userAccountRepository, IPasswordHasher hasher) : IRequestHandler<CreateUserCommand, int>
+public class CreateUserCommandHandler (IUserRepository userRepository, IPasswordHasher hasher) : IRequestHandler<CreateUserCommand, int>
 {
     public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
@@ -24,10 +24,10 @@ public class CreateUserCommandHandler (IUserAccountRepository userAccountReposit
             LastName = request.LastName,
             FirstName = request.FirstName,
             Email = request.Email,
-            Password = hashedPassword
+            PasswordHash = hashedPassword
         };
 
-        int id = await userAccountRepository.Create(user, cancellationToken);
+        int id = await userRepository.Create(user, cancellationToken);
         return id;
     }
 }

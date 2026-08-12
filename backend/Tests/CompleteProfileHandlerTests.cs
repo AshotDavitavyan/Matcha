@@ -23,7 +23,7 @@ public class CompleteProfileHandlerTests
 	[Fact]
 	public async Task HandleAsync_MissingUserIdClaim_DoesNotSucceed()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var requirement = new CompleteProfileRequirement();
 		var context = CreateContext(new ClaimsPrincipal(new ClaimsIdentity("TestAuth")), requirement);
 		var handler = new CompleteProfileHandler(repository);
@@ -37,7 +37,7 @@ public class CompleteProfileHandlerTests
 	[Fact]
 	public async Task HandleAsync_InvalidUserIdClaim_DoesNotSucceed()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var requirement = new CompleteProfileRequirement();
 		var context = CreateContext(UserWithClaim("sub", "not-an-int"), requirement);
 		var handler = new CompleteProfileHandler(repository);
@@ -51,7 +51,7 @@ public class CompleteProfileHandlerTests
 	[Fact]
 	public async Task HandleAsync_IncompleteProfile_DoesNotSucceed()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var requirement = new CompleteProfileRequirement();
 		var context = CreateContext(UserWithClaim("sub", "7"), requirement);
 		var handler = new CompleteProfileHandler(repository);
@@ -67,7 +67,7 @@ public class CompleteProfileHandlerTests
 	[Fact]
 	public async Task HandleAsync_CompleteProfile_Succeeds()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var requirement = new CompleteProfileRequirement();
 		var context = CreateContext(UserWithClaim("sub", "7"), requirement);
 		var handler = new CompleteProfileHandler(repository);
@@ -83,7 +83,7 @@ public class CompleteProfileHandlerTests
 	[Fact]
 	public async Task HandleAsync_NameIdentifierClaim_UsesMappedUserId()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var requirement = new CompleteProfileRequirement();
 		var context = CreateContext(UserWithClaim(ClaimTypes.NameIdentifier, "9"), requirement);
 		var handler = new CompleteProfileHandler(repository);
@@ -99,7 +99,7 @@ public class CompleteProfileHandlerTests
 	[Fact]
 	public async Task HandleAsync_HttpContextResource_ForwardsRequestAbortedToken()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var requirement = new CompleteProfileRequirement();
 		var httpContext = new DefaultHttpContext();
 		using var cancellationTokenSource = new CancellationTokenSource();
