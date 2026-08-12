@@ -5,10 +5,10 @@ namespace Application.Commands;
 
 public record LogoutCommand(int UserId) : IRequest;
 
-public class LogoutCommandHandler(IAuthRepository userRepository) : IRequestHandler<LogoutCommand>
+public class LogoutCommandHandler(IRefreshTokenRepository userRepository) : IRequestHandler<LogoutCommand>
 {
 	public async Task Handle(LogoutCommand request, CancellationToken cancellationToken)
 	{
-		await userRepository.ClearRefreshToken(request.UserId, cancellationToken);
+		await userRepository.DeleteByUserId(request.UserId, cancellationToken);
 	}
 }

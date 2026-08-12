@@ -2,7 +2,7 @@ using Domain.Enums;
 
 namespace Application.Dtos.UserDtos;
 
-public record UpdateUserProfileDto
+public record UpdateUserDto
 {
 	public string FirstName { get; set; }
 	public string LastName { get; set; }

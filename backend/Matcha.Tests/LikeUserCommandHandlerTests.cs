@@ -1,5 +1,5 @@
 using Application.Commands;
-using Domain.Entities;
+using Domain.Entities.Users;
 using Domain.Exceptions;
 using Domain.Repositories;
 using NSubstitute;
@@ -12,7 +12,7 @@ public class LikeUserCommandHandlerTests
 	public async Task Handle_SelfLike_Throws()
 	{
 		var repository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new LikeUserCommandHandler(repository, accountRepository);
 		var command = new LikeUserCommand(1, 1);
 
@@ -27,7 +27,7 @@ public class LikeUserCommandHandlerTests
 	public async Task Handle_LikedUserNotFound_Throws()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
@@ -45,7 +45,7 @@ public class LikeUserCommandHandlerTests
 	public async Task Handle_ReverseLikeDoesNotExist_ReturnsFalse()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
@@ -65,7 +65,7 @@ public class LikeUserCommandHandlerTests
 	public async Task Handle_ReverseLikeExists_ReturnsTrue()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
 		var command = new LikeUserCommand(1, 2);
 
@@ -87,7 +87,7 @@ public class LikeUserCommandHandlerTests
 		{
 			Id = id,
 			Username = $"user{id}",
-			Password = "password",
+			PasswordHash = "password",
 			Email = $"user{id}@example.com",
 			FirstName = "Test",
 			LastName = "User"

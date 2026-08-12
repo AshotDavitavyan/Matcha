@@ -1,4 +1,4 @@
-using Domain.Entities;
+using Domain.Entities.Users;
 using Domain.Exceptions;
 using Domain.Repositories;
 using Infrastructure.Database;

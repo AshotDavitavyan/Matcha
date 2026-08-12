@@ -2,7 +2,8 @@ using Application.Commands;
 using Application.Dtos.UserDtos;
 using Application.Interfaces;
 using Application.Queries;
-using Domain.Entities;
+using Domain.Entities.Authentication;
+using Domain.Entities.Users;
 using Domain.Enums;
 using Domain.Repositories;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +16,7 @@ public class CancellationTokenPropagationTests
 	[Fact]
 	public async Task CreateUserCommand_ForwardsTokenToRepository()
 	{
-		var repository = Substitute.For<IUserAccountRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var hasher = Substitute.For<IPasswordHasher>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
@@ -34,86 +35,111 @@ public class CancellationTokenPropagationTests
 	[Fact]
 	public async Task LoginCommand_ForwardsTokenToRepositories()
 	{
-		var accountRepository = Substitute.For<IUserAccountRepository>();
-		var authRepository = Substitute.For<IAuthRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
+		var authRepository = Substitute.For<IRefreshTokenRepository>();
 		var passwordHasher = Substitute.For<IPasswordHasher>();
 		var tokenService = Substitute.For<ITokenService>();
 		var configuration = Substitute.For<IConfiguration>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var user = CreateUser(7);
-		user.Password = "hashed-password";
+		user.PasswordHash = "hashed-password";
 		var handler = new LoginCommandHandler(accountRepository, authRepository, passwordHasher, tokenService, configuration);
 
 		configuration["Jwt:RefreshTokenExpiryDays"].Returns("7");
 		accountRepository.GetByUsername("alice", token).Returns(Task.FromResult<User?>(user));
-		passwordHasher.VerifyPassword("password", user.Password).Returns(true);
-		tokenService.GenerateToken(user).Returns("access-token");
-		authRepository.SaveRefreshToken(user.Id, Arg.Any<string>(), Arg.Any<DateTime>(), token)
+		passwordHasher.VerifyPassword("password", user.PasswordHash).Returns(true);
+		tokenService.GenerateAccessToken(user).Returns("access-token");
+		tokenService.GenerateRefreshToken().Returns("raw-refresh-token");
+		tokenService.HashRefreshToken("raw-refresh-token").Returns("refresh-token-hash");
+		authRepository.Save(Arg.Any<RefreshToken>(), token)
 			.Returns(Task.CompletedTask);
 
 		await handler.Handle(new LoginCommand("alice", "password"), token);
 
 		await accountRepository.Received(1).GetByUsername("alice", token);
-		await authRepository.Received(1).SaveRefreshToken(user.Id, Arg.Any<string>(), Arg.Any<DateTime>(), token);
+		await authRepository.Received(1).Save(
+			Arg.Is<RefreshToken>(refreshToken =>
+				refreshToken.UserId == user.Id &&
+				refreshToken.TokenHash == "refresh-token-hash"),
+			token);
 	}
 
 	[Fact]
 	public async Task RefreshTokenCommand_ForwardsTokenToRepositories()
 	{
-		var authRepository = Substitute.For<IAuthRepository>();
+		var authRepository = Substitute.For<IRefreshTokenRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		var tokenService = Substitute.For<ITokenService>();
 		var configuration = Substitute.For<IConfiguration>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var user = CreateUser(7);
-		user.RefreshToken = "refresh-token";
-		user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(1);
-		var handler = new RefreshTokenCommandHandler(authRepository, tokenService, configuration);
+		var storedToken = new RefreshToken
+		{
+			UserId = user.Id,
+			TokenHash = "refresh-token-hash",
+			ExpiresAt = DateTime.UtcNow.AddDays(1)
+		};
+		var handler = new RefreshTokenCommandHandler(
+			authRepository,
+			tokenService,
+			configuration,
+			accountRepository);
 
 		configuration["Jwt:RefreshTokenExpiryDays"].Returns("7");
-		authRepository.GetByRefreshToken("refresh-token", token).Returns(Task.FromResult<User?>(user));
-		tokenService.GenerateToken(user).Returns("access-token");
-		authRepository.SaveRefreshToken(user.Id, Arg.Any<string>(), Arg.Any<DateTime>(), token)
+		tokenService.HashRefreshToken("refresh-token").Returns("refresh-token-hash");
+		authRepository.GetByTokenHash("refresh-token-hash", token)
+			.Returns(Task.FromResult<RefreshToken?>(storedToken));
+		accountRepository.GetById(user.Id, token).Returns(Task.FromResult<User?>(user));
+		tokenService.GenerateAccessToken(user).Returns("access-token");
+		tokenService.GenerateRefreshToken().Returns("new-refresh-token");
+		tokenService.HashRefreshToken("new-refresh-token").Returns("new-refresh-token-hash");
+		authRepository.Save(Arg.Any<RefreshToken>(), token)
 			.Returns(Task.CompletedTask);
 
 		await handler.Handle(new RefreshTokenCommand("refresh-token"), token);
 
-		await authRepository.Received(1).GetByRefreshToken("refresh-token", token);
-		await authRepository.Received(1).SaveRefreshToken(user.Id, Arg.Any<string>(), Arg.Any<DateTime>(), token);
+		await authRepository.Received(1).GetByTokenHash("refresh-token-hash", token);
+		await accountRepository.Received(1).GetById(user.Id, token);
+		await authRepository.Received(1).Save(
+			Arg.Is<RefreshToken>(refreshToken =>
+				refreshToken.UserId == user.Id &&
+				refreshToken.TokenHash == "new-refresh-token-hash"),
+			token);
 	}
 
 	[Fact]
 	public async Task LogoutCommand_ForwardsTokenToRepository()
 	{
-		var repository = Substitute.For<IAuthRepository>();
+		var repository = Substitute.For<IRefreshTokenRepository>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var handler = new LogoutCommandHandler(repository);
 
-		repository.ClearRefreshToken(7, token).Returns(Task.CompletedTask);
+		repository.DeleteByUserId(7, token).Returns(Task.CompletedTask);
 
 		await handler.Handle(new LogoutCommand(7), token);
 
-		await repository.Received(1).ClearRefreshToken(7, token);
+		await repository.Received(1).DeleteByUserId(7, token);
 	}
 
 	[Fact]
 	public async Task UpdatePasswordCommand_ForwardsTokenToRepositoryCalls()
 	{
-		var repository = Substitute.For<IUserAccountRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		var hasher = Substitute.For<IPasswordHasher>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var user = CreateUser(7);
-		user.Password = "old-hash";
+		user.PasswordHash = "old-hash";
 		var handler = new UpdatePasswordCommandHandler(repository, hasher);
 		var dto = new UpdatePasswordDto { CurrentPassword = "old-password", NewPassword = "new-password" };
 
 		hasher.HashPassword(dto.NewPassword).Returns("new-hash");
 		repository.GetById(7, token).Returns(Task.FromResult<User?>(user));
-		hasher.VerifyPassword(dto.CurrentPassword, user.Password).Returns(true);
-		hasher.VerifyPassword(dto.NewPassword, user.Password).Returns(false);
+		hasher.VerifyPassword(dto.CurrentPassword, user.PasswordHash).Returns(true);
+		hasher.VerifyPassword(dto.NewPassword, user.PasswordHash).Returns(false);
 		repository.UpdatePassword(7, "new-hash", token).Returns(Task.CompletedTask);
 
 		await handler.Handle(new UpdatePasswordCommand(7, dto), token);
@@ -123,13 +149,13 @@ public class CancellationTokenPropagationTests
 	}
 
 	[Fact]
-	public async Task UpdateProfileCommand_ForwardsTokenToRepository()
+	public async Task UpdateUserCommand_ForwardsTokenToRepository()
 	{
-		var repository = Substitute.For<IUserProfileRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
-		var handler = new UpdateProfileCommandHandler(repository);
-		var dto = new UpdateUserProfileDto
+		var handler = new UpdateUserCommandHandler(repository);
+		var dto = new UpdateUserDto
 		{
 			FirstName = "Alice",
 			LastName = "Doe",
@@ -140,17 +166,17 @@ public class CancellationTokenPropagationTests
 			Tags = new List<string> { "music", "coffee" }
 		};
 
-		repository.UpdateProfile(Arg.Any<UserProfile>(), token).Returns(Task.CompletedTask);
+		repository.UpdateUser(Arg.Any<User>(), token).Returns(Task.CompletedTask);
 
-		await handler.Handle(new UpdateProfileCommand(7, dto), token);
+		await handler.Handle(new UpdateUserCommand(7, dto), token);
 
-		await repository.Received(1).UpdateProfile(Arg.Any<UserProfile>(), token);
+		await repository.Received(1).UpdateUser(Arg.Any<User>(), token);
 	}
 
 	[Fact]
 	public async Task GetAllUsersQuery_ForwardsTokenToRepository()
 	{
-		var repository = Substitute.For<IUserAccountRepository>();
+		var repository = Substitute.For<IUserRepository>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var handler = new GetAllUsersCommandHandler(repository);
@@ -165,31 +191,20 @@ public class CancellationTokenPropagationTests
 	[Fact]
 	public async Task GetUserByIdQuery_ForwardsTokenToRepository()
 	{
-		var repository = Substitute.For<IUserAccountRepository>();
+		var repository = Substitute.For<IUserRepository>();
+		var pictureRepository = Substitute.For<IUserPictureRepository>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
-		var handler = new GetUserByIdQueryHandler(repository);
+		var handler = new GetUserByIdQueryHandler(repository, pictureRepository);
 
 		repository.GetById(7, token).Returns(Task.FromResult<User?>(CreateUser(7)));
+		pictureRepository.GetPicturesByUserId(7, token)
+			.Returns(Task.FromResult(new List<Picture>()));
 
 		await handler.Handle(new GetUserByIdQuery(7), token);
 
 		await repository.Received(1).GetById(7, token);
-	}
-
-	[Fact]
-	public async Task GetUserProfileQuery_ForwardsTokenToRepository()
-	{
-		var repository = Substitute.For<IUserProfileRepository>();
-		using var cancellationTokenSource = new CancellationTokenSource();
-		CancellationToken token = cancellationTokenSource.Token;
-		var handler = new GetUserProfileQueryHandler(repository);
-
-		repository.GetUserProfile(7, token).Returns(Task.FromResult<UserProfile?>(CreateProfile(7)));
-
-		await handler.Handle(new GetUserProfileQuery(7), token);
-
-		await repository.Received(1).GetUserProfile(7, token);
+		await pictureRepository.Received(1).GetPicturesByUserId(7, token);
 	}
 
 	[Fact]
@@ -253,7 +268,7 @@ public class CancellationTokenPropagationTests
 	public async Task LikeUserCommand_ForwardsTokenToRepositories()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var handler = new LikeUserCommandHandler(likeRepository, accountRepository);
@@ -274,7 +289,7 @@ public class CancellationTokenPropagationTests
 	public async Task UnlikeUserCommand_ForwardsTokenToRepositories()
 	{
 		var likeRepository = Substitute.For<ILikeRepository>();
-		var accountRepository = Substitute.For<IUserAccountRepository>();
+		var accountRepository = Substitute.For<IUserRepository>();
 		using var cancellationTokenSource = new CancellationTokenSource();
 		CancellationToken token = cancellationTokenSource.Token;
 		var handler = new UnlikeUserCommandHandler(likeRepository, accountRepository);
@@ -295,25 +310,11 @@ public class CancellationTokenPropagationTests
 		{
 			Id = id,
 			Username = $"user{id}",
-			Password = "password",
+			PasswordHash = "password",
 			Email = $"user{id}@example.com",
 			FirstName = "Test",
 			LastName = "User"
 		};
 	}
 
-	private static UserProfile CreateProfile(int id)
-	{
-		return new UserProfile
-		{
-			Id = id,
-			Username = $"user{id}",
-			FirstName = "Test",
-			LastName = "User",
-			Email = $"user{id}@example.com",
-			Biography = "Bio",
-			Gender = Gender.Female,
-			SexualPreference = SexualPreference.Both
-		};
-	}
 }

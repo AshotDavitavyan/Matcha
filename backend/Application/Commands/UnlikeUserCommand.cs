@@ -6,7 +6,7 @@ namespace Application.Commands;
 
 public record UnlikeUserCommand(int LikerId, int LikedId) : IRequest;
 
-public class UnlikeUserCommandHandler(ILikeRepository likeRepository, IUserAccountRepository accountRepository) : IRequestHandler<UnlikeUserCommand>
+public class UnlikeUserCommandHandler(ILikeRepository likeRepository, IUserRepository repository) : IRequestHandler<UnlikeUserCommand>
 {
 	public async Task Handle(UnlikeUserCommand request, CancellationToken cancellationToken)
 	{
@@ -14,7 +14,7 @@ public class UnlikeUserCommandHandler(ILikeRepository likeRepository, IUserAccou
 		{
 			throw new SelfLikeException();
 		}
-		if (await accountRepository.GetById(request.LikedId, cancellationToken) == null)
+		if (await repository.GetById(request.LikedId, cancellationToken) == null)
 		{
 			throw new UserNotFoundException(request.LikedId.ToString());
 		}
