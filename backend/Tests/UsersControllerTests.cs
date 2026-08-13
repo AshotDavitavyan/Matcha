@@ -1,15 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace Tests;
 
-public class UsersControllerTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection(ApplicationConfigurationCollection.Name)]
+public class UsersControllerTests : IClassFixture<MatchaWebApplicationFactory>
 {
 	private readonly HttpClient _client;
 
-	public UsersControllerTests(WebApplicationFactory<Program> factory)
+	public UsersControllerTests(MatchaWebApplicationFactory factory)
 	{
 		_client = factory.CreateClient();
 	}
