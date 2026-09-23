@@ -14,4 +14,5 @@ public class User
    public Gender? Gender { get; set; }
 	public SexualPreference? SexualPreference { get; set; }
    public List<string> Tags { get; set; } = new();
+   public DateTime? EmailVerifiedAt { get; set; }
 }
